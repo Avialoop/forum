@@ -1,7 +1,7 @@
 body {
-    font-family: 'Courier New', Courier, monospace;
-    background-color: #1e1e1e;
-    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
     margin: 0;
     padding: 0;
     display: flex;
@@ -17,8 +17,9 @@ header {
     width: 100%;
 }
 
-nav {
-    margin-top: 15px;
+.nav-bar {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .nav-button {
@@ -26,7 +27,7 @@ nav {
     padding: 10px 15px;
     border: none;
     border-radius: 5px;
-    background: #007acc;
+    background: #005f99;
     color: white;
     cursor: pointer;
     transition: background 0.3s;
@@ -34,7 +35,7 @@ nav {
 }
 
 .nav-button:hover {
-    background: #005f99;
+    background: #004b75;
 }
 
 .loading {
@@ -68,63 +69,67 @@ nav {
 .form-container, .admin-panel {
     margin: 20px;
     padding: 20px;
-    background: #2c2c2c;
+    background: #ffffff;
     border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
 }
 
-.form-container form, .admin-panel form {
+.form-container form {
     display: flex;
     flex-direction: column;
 }
 
-.form-container input, .form-container textarea, .admin-panel input {
+.form-container input, .form-container textarea {
     margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #555;
+    padding: 15px;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    background: #424242;
-    color: white;
+    background: #f9f9f9;
+    font-size: 14px;
 }
 
-.form-container button, .admin-panel button {
-    padding: 10px;
+.form-container button {
+    padding: 15px;
     border: none;
     border-radius: 5px;
     background: #007acc;
     color: white;
     cursor: pointer;
     transition: background 0.3s;
+    font-size: 16px;
 }
 
-.form-container button:hover, .admin-panel button:hover {
+.form-container button:hover {
     background: #005f99;
+}
+
+.checkbox-container {
+    margin-bottom: 15px;
 }
 
 .post-container {
     margin: 20px;
     padding: 20px;
-    background: #2c2c2c;
+    background: #ffffff;
     border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
 }
 
 .post {
     margin-top: 20px;
-    padding: 10px;
-    background: #3c3c3c;
-    border: 1px solid #555;
+    padding: 15px;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
     border-radius: 5px;
     position: relative;
 }
 
-.post::before {
-    content: "$ "; /* Символ терминала перед текстом поста */
-    color: #00ff00; /* Зеленый цвет для терминала */
+.post h3 {
+    margin: 0;
 }
 
 .post img {
@@ -152,18 +157,17 @@ nav {
     display: none;
     margin: 20px;
     padding: 20px;
-    background: #2c2c2c;
+    background: #ffffff;
     border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
 }
 
 .admin-panel input {
     margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #555;
+    padding: 15px;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    background: #424242;
-    color: white;
+    background: #f9f9f9;
 }
