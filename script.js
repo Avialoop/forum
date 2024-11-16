@@ -1,72 +1,28 @@
 let isAdmin = false; // Флаг для проверки, является ли пользователь администратором
 let posts = JSON.parse(localStorage.getItem('posts')) || []; // Получаем посты из localStorage
 let currentUser = null; // Текущий пользователь, который вошел в систему
-let timerInterval; // Переменная для таймера
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Скрываем основной контент до загрузки
     setTimeout(() => {
-        document.getElementById("loading").classList.add("hidden"); // Скрываем анимацию загрузки
-        document.getElementById("app").classList.remove("hidden"); // Показываем приложение
-        renderPosts(); // Отображаем посты при загрузке
-        updatePostTimer(); // Запускаем таймер
-    }, 2000); // Анимация загрузки на 2 секунды
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        renderPosts();
+        updatePostTimer();
+    }, 2000);
 });
 
 // Функция для обновления таймера
 function updatePostTimer() {
-    timerInterval = setInterval(() => {
+    setInterval(() => {
         const currentTime = new Date().getTime();
         posts.forEach((post, index) => {
-            const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime); // 7 дней
+            const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
             if (timeLeft === 0 && !post.isBlocked) {
-                deletePostByIndex(index); // Удаляем пост по истечении времени
+                deletePostByIndex(index);
             }
         });
-        updateTimerDisplay(); // Обновляем отображение таймера
-    }, 1000); // Обновляем каждую секунду
-}
-
-// Функция для обновления отображения таймера
-function updateTimerDisplay() {
-    const currentTime = new Date().getTime();
-    let totalTimeLeft = 0;
-
-    posts.forEach(post => {
-        const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
-        totalTimeLeft += timeLeft;
-    });
-
-    const daysLeft = Math.floor(totalTimeLeft / (1000 * 60 * 60 * 24));
-    const hoursLeft = Math.floor((totalTimeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutesLeft = Math.floor((totalTimeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    
-    const timerDisplay = document.getElementById("post-timer");
-    timerDisplay.textContent = `Осталось времени: ${daysLeft}д ${hoursLeft}ч ${minutesLeft}м`;
-}
-
-// Показать форму создания поста
-function createPost(event) {
-    event.preventDefault(); // Предотвращаем перезагрузку страницы
-
-    const title = document.getElementById("post-title").value; // Получаем заголовок поста
-    const content = document.getElementById("post-content").value; // Получаем содержание поста
-    const allowComments = document.getElementById("allow-comments").checked; // Получаем флаг комментариев
-
-    const post = {
-        title: title,
-        content: content,
-        createdAt: new Date().getTime(), // Время создания поста
-        author: currentUser, // Автор поста
-        isBlocked: false, // Флаг блокировки поста
-        comments: allowComments ? [] : null // Список комментариев, если разрешены
-    };
-
-    posts.push(post); // Добавляем пост в массив
-    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем посты в localStorage
-    renderPosts(); // Обновляем отображение постов
-
-    document.getElementById("post-form").reset(); // Сброс формы
+        renderPosts(); // Обновляем отображение постов
+    }, 1000);
 }
 
 // Отображение постов
@@ -78,18 +34,33 @@ function renderPosts() {
         const postElement = document.createElement("div");
         postElement.classList.add("post");
 
+        // Вычисляем оставшееся время до удаления
+        const currentTime = new Date().getTime();
+        const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
+        const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+        // Добавляем заголовок поста
+        const postTitle = document.createElement("h3");
+        postTitle.textContent = post.title; // Заголовок поста
+        postElement.appendChild(postTitle); // Добавляем заголовок в пост
+
+        // Показ времени до удаления
+        const timeDisplay = document.createElement("span");
+        timeDisplay.textContent = `Осталось: ${daysLeft}д ${hoursLeft}ч ${minutesLeft}м`;
+        timeDisplay.classList.add("time-display");
+        postElement.appendChild(timeDisplay); // Добавляем отображение времени
+
+        postElement.onclick = function () {
+            showPostDetails(index); // Показать детали поста при клике
+        };
+
         // Проверяем, заблокирован ли пост
         if (post.isBlocked) {
             postElement.classList.add("blocked"); // Добавляем класс для блокированных постов
-            postElement.innerHTML = `
-                <h3>${post.title} <span>🚫</span></h3>
-                <p>Пост заблокирован.</p>
-            `;
+            postElement.innerHTML += `<p>Пост заблокирован.</p>`;
         } else {
-            const postTitle = document.createElement("h3");
-            postTitle.textContent = post.title; // Заголовок поста
-            postElement.appendChild(postTitle); // Добавляем заголовок в пост
-
             const postContent = document.createElement("p");
             postContent.textContent = post.content; // Содержание поста
             postElement.appendChild(postContent); // Добавляем содержание в пост
@@ -108,27 +79,19 @@ function renderPosts() {
                 const blockButton = document.createElement("button");
                 blockButton.textContent = "Заблокировать"; // Текст кнопки блокировки
                 blockButton.classList.add("block-button");
-                blockButton.onclick = function() {
+                blockButton.onclick = function () {
                     blockPost(index); // Вызов функции блокировки
                 };
                 postElement.appendChild(blockButton); // Добавляем кнопку блокировки
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Удалить"; // Текст кнопки удаления
+                deleteButton.classList.add("delete-button");
+                deleteButton.onclick = function () {
+                    deletePostByIndex(index); // Вызов функции удаления
+                };
+                postElement.appendChild(deleteButton); // Добавляем кнопку удаления
             }
-
-            const editButton = document.createElement("button");
-            editButton.textContent = "Редактировать"; // Текст кнопки редактирования
-            editButton.classList.add("edit-button");
-            editButton.onclick = function() {
-                editPost(index); // Вызов функции редактирования
-            };
-            postElement.appendChild(editButton); // Добавляем кнопку редактирования
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "Удалить"; // Текст кнопки удаления
-            deleteButton.classList.add("delete-button");
-            deleteButton.onclick = function() {
-                deletePostByIndex(index); // Вызов функции удаления
-            };
-            postElement.appendChild(deleteButton); // Добавляем кнопку удаления
 
             // Добавление секции комментариев
             if (post.comments) {
@@ -141,7 +104,7 @@ function renderPosts() {
 
                 const commentButton = document.createElement("button");
                 commentButton.textContent = "Добавить комментарий";
-                commentButton.onclick = function() {
+                commentButton.onclick = function () {
                     addComment(index, commentInput.value); // Вызов функции добавления комментария
                     commentInput.value = ""; // Сброс поля ввода
                 };
@@ -165,6 +128,31 @@ function renderPosts() {
     });
 }
 
+// Функция для показа деталей поста
+function showPostDetails(postIndex) {
+    const post = posts[postIndex];
+    const postDetailContainer = document.createElement("div");
+    postDetailContainer.className = "post-detail";
+
+    postDetailContainer.innerHTML = `
+        <h3>${post.title}</h3>
+        <p>${post.content}</p>
+        <p>Автор: ${post.author}</p>
+        <p>Создано: ${new Date(post.createdAt).toLocaleString()}</p>
+        <button onclick="closePostDetails()">Закрыть</button>
+    `;
+
+    document.body.appendChild(postDetailContainer); // Добавляем детали поста в тело
+}
+
+// Функция для закрытия деталей поста
+function closePostDetails() {
+    const postDetailContainer = document.querySelector(".post-detail");
+    if (postDetailContainer) {
+        document.body.removeChild(postDetailContainer); // Удаляем детали поста
+    }
+}
+
 // Функция добавления комментария
 function addComment(postIndex, comment) {
     if (comment.trim() !== "") {
@@ -179,16 +167,6 @@ function blockPost(index) {
     posts[index].isBlocked = true; // Устанавливаем флаг блокировки
     localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
     renderPosts(); // Обновляем отображение постов
-}
-
-// Редактирование поста
-function editPost(index) {
-    const post = posts[index]; // Получаем пост по индексу
-    document.getElementById("post-title").value = post.title; // Заполняем заголовок
-    document.getElementById("post-content").value = post.content; // Заполняем содержание
-
-    // Удаляем пост, чтобы создать новый с обновленным содержанием
-    deletePostByIndex(index);
 }
 
 // Удаление поста по индексу
@@ -269,8 +247,6 @@ function showLogin() {
 // Обработка логики входа
 function handleLogin(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
-
-    // Здесь должна быть логика для проверки пользователя, временно добавим заглушку
     currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
     alert("Вход выполнен!"); // Уведомление о входе
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
@@ -293,7 +269,6 @@ function showRegistration() {
 // Обработка логики регистрации
 function handleRegistration(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
-    // Здесь должна быть логика для регистрации пользователя
     alert("Регистрация успешна!"); // Уведомление о регистрации
     showLogin(); // Показать форму входа после регистрации
 }
@@ -308,5 +283,13 @@ function updateAccountInfo() {
 function showPostContainer() {
     document.getElementById("form-container").classList.add("hidden"); // Скрыть форму
     document.getElementById("post-container").classList.remove("hidden"); // Показать контейнер с постами
-    renderPosts(); // Отобразить посты
 }
+
+// Загрузка постов из localStorage при загрузке страницы
+window.onload = function() {
+    const savedPosts = JSON.parse(localStorage.getItem('posts'));
+    if (savedPosts) {
+        posts = savedPosts; // Загружаем сохраненные посты
+        renderPosts(); // Отображаем посты
+    }
+};
