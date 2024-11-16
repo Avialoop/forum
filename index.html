@@ -1,55 +1,95 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форум</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div id="loading" class="loading">
-        <div class="loader"></div>
-        <h1>Заг...</h1>
-    </div>
+        isBlocked: false,
+        isPinned: false
+    };
 
-    <div id="app" class="hidden">
-        <header>
-            <h1>Форум</h1>
-            <nav id="nav-bar">
-                <button class="nav-button" id="logout-button" onclick="logout()">Выйти</button>
-                <span id="account-info"></span>
-                <button class="nav-button hidden" id="admin-panel-button" onclick="openAdminPanel()">Панель администратора</button>
-                <button class="nav-button" id="admin-login-button" onclick="showAdminLogin()">Войти как администратор</button> <!-- Кнопка для входа как администратор -->
-            </nav>
-        </header>
-        <main>
-            <div id="form-container" class="form-container hidden"></div>
+    posts.push(newPost); // Добавляем новый пост в массив
+    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+    renderPosts(); // Обновляем отображение постов на главной странице
 
-            <div id="post-container" class="post-container">
-                <h2>Создать пост</h2>
-                <form id="post-form" onsubmit="createPost(event)">
-                    <input type="text" id="post-title" placeholder="Заголовок поста" required>
-                    <textarea id="post-content" placeholder="Содержание поста" required></textarea>
-                    <label>
-                        <input type="checkbox" id="allow-comments"> Разрешить комментарии
-                    </label>
-                    <button type="submit">Опубликовать</button>
-                </form>
-                <div id="posts"></div>
-            </div>
-        </main>
-    </div>
+    // Очищаем поля ввода после публикации
+    document.getElementById("post-title").value = "";
+    document.getElementById("post-content").value = "";
+    document.getElementById("allow-comments").checked = false;
+}
 
-    <div id="admin-panel" class="hidden">
-        <div class="admin-overlay" onclick="closeAdminPanel()"></div>
-        <div class="admin-content">
-            <h2>Панель администратора</h2>
-            <div id="admin-posts"></div>
-            <button onclick="clearAllPosts()">Удалить все посты</button>
-            <button onclick="closeAdminPanel()">Закрыть</button>
-        </div>
-    </div>
+// Логика выхода из аккаунта
+function logout() {
+    currentUser = null; // Сбрасываем текущего пользователя
+    isAdmin = false; // Сбрасываем флаг администратора
+    document.getElementById("admin-panel-button").classList.add("hidden"); // Скрываем кнопку панели администратора
+    document.getElementById("admin-login-button").classList.remove("hidden"); // Показываем кнопку входа как администратор
+    alert("Вы вышли из системы."); // Уведомление о выходе
+    showLogin(); // Показать форму входа
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+// Показать форму входа
+function showLogin() {
+    document.getElementById("form-container").innerHTML = `
+        <h2>Вход</h2>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <input type="text" id="username" placeholder="Имя пользователя" required>
+            <button type="submit">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="showRegistration()">Зарегистрируйтесь</a></p>
+        </form>
+    `;
+    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму
+}
+
+// Обработка логики входа
+function handleLogin(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
+    alert("Вход выполнен!"); // Уведомление о входе
+    document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
+    document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin); // Показываем или скрываем кнопку панели администратора
+    updateAccountInfo(); // Обновляем информацию о текущем пользователе
+}
+
+// Показать форму регистрации
+function showRegistration() {
+    document.getElementById("form-container").innerHTML = `
+        <h2>Регистрация</h2>
+        <form id="registration-form" onsubmit="handleRegistration(event)">
+            <input type="text" id="new-username" placeholder="Имя пользователя" required>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    `;
+    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму
+}
+
+// Обработка логики регистрации
+function handleRegistration(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    const newUsername = document.getElementById("new-username").value;
+
+    // Проверяем, существует ли пользователь с таким именем
+    if (users.some(user => user.username === newUsername)) {
+        alert("Пользователь с таким именем уже существует!");
+        return;
+    }
+
+    // Добавляем нового пользователя
+    users.push({ username: newUsername, isBlocked: false });
+    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем изменения в localStorage
+    alert("Регистрация успешна!"); // Уведомление о регистрации
+    showLogin(); // Показать форму входа после регистрации
+}
+
+// Обновление информации о текущем пользователе
+function updateAccountInfo() {
+    const accountInfo = document.getElementById("account-info");
+    accountInfo.textContent = `Вход: ${currentUser}`;
+}
+
+// Загрузка пользователей из localStorage при загрузке страницы
+window.onload = function() {
+    const savedPosts = JSON.parse(localStorage.getItem('posts'));
+    if (savedPosts) {
+        posts = savedPosts; // Загружаем сохраненные посты
+        renderPosts(); // Отображаем посты
+    }
+    const savedUsers = JSON.parse(localStorage.getItem('users'));
+    if (savedUsers) {
+        users = savedUsers; // Загружаем сохраненных пользователей
+    }
+};
