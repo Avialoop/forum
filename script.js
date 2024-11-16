@@ -11,6 +11,82 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
 });
 
+// Открыть панель администратора
+function openAdminPanel() {
+    if (!isAdmin) {
+        alert("Вы должны войти как администратор!");
+        return;
+    }
+    renderAdminPosts(); // Отображаем посты в панели администратора
+    document.getElementById("admin-panel").classList.remove("hidden"); // Показываем панель администратора
+}
+
+// Закрыть панель администратора
+function closeAdminPanel() {
+    document.getElementById("admin-panel").classList.add("hidden"); // Скрываем панель администратора
+}
+
+// Отображение постов в панели администратора
+function renderAdminPosts() {
+    const adminPostsContainer = document.getElementById("admin-posts");
+    adminPostsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
+
+    posts.forEach((post, index) => {
+        const postElement = document.createElement("div");
+        postElement.classList.add("post");
+
+        postElement.innerHTML = `
+            <h3>${post.title}</h3>
+            <p>Автор: ${post.author}</p>
+            <button onclick="showAdminPostActions(${index})">Действия</button>
+        `;
+
+        adminPostsContainer.appendChild(postElement); // Добавляем пост в контейнер
+    });
+}
+
+// Показать действия для поста
+function showAdminPostActions(postIndex) {
+    const actions = confirm("Выберите действие:\n\n1. Удалить пост\n2. Заблокировать пост\n3. Удалить все заблокированные посты");
+    if (actions) {
+        const action = prompt("Введите номер действия (1, 2 или 3):");
+        if (action === "1") {
+            deletePostByIndex(postIndex); // Удалить пост
+        } else if (action === "2") {
+            blockPost(postIndex); // Заблокировать пост
+        } else if (action === "3") {
+            deleteAllBlockedPosts(); // Удалить все заблокированные посты
+        }
+    }
+}
+
+// Удалить все заблокированные посты
+function deleteAllBlockedPosts() {
+    posts = posts.filter(post => !post.isBlocked); // Фильтруем заблокированные посты
+    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+    renderAdminPosts(); // Обновляем отображение постов в панели администратора
+}
+
+// Остальные функции остаются без изменений...
+
+// Удаление поста по индексу
+function deletePostByIndex(index) {
+    posts.splice(index, 1); // Удаляем пост из массива
+    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
+    renderPosts(); // Обновляем отображение постов на главной странице
+    renderAdminPosts(); // Обновляем отображение постов в панели администратора
+}
+
+// Блокировка поста
+function blockPost(index) {
+    posts[index].isBlocked = true; // Устанавливаем флаг блокировки
+    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
+    renderPosts(); // Обновляем отображение постов на главной странице
+    renderAdminPosts(); // Обновляем отображение постов в панели администратора
+}
+
+// Остальная логика (вход, регистрация и т.д.) остается без изменений...
+
 // Функция для обновления таймера
 function updatePostTimer() {
     setInterval(() => {
