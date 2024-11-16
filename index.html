@@ -17,8 +17,8 @@
             <h1>Форум</h1>
             <nav id="nav-bar">
                 <button class="nav-button" id="logout-button" onclick="logout()">Выйти</button>
-                <button class="nav-button" onclick="showAdminLogin()">Вход как админ</button>
                 <span id="account-info"></span>
+                <button class="nav-button hidden" id="admin-panel-button" onclick="openAdminPanel()">Панель администратора</button>
             </nav>
         </header>
         <main>
@@ -35,7 +35,6 @@
                     <button type="submit">Опубликовать</button>
                 </form>
                 <div id="posts"></div>
-                <button class="nav-button" onclick="openAdminPanel()">Панель администратора</button> <!-- Кнопка для открытия панели администратора -->
             </div>
         </main>
     </div>
