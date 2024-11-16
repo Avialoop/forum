@@ -15,8 +15,9 @@
     <div id="app" class="hidden">
         <header>
             <h1>Форум</h1>
-            <nav id="nav-bar" class="nav-bar">
+            <nav id="nav-bar">
                 <button class="nav-button" id="logout-button" onclick="logout()">Выйти</button>
+                <button class="nav-button" onclick="showAdminPanel()">Войти как админ</button>
             </nav>
         </header>
         <main>
@@ -27,19 +28,11 @@
                 <form id="post-form" onsubmit="createPost(event)">
                     <input type="text" id="post-title" placeholder="Заголовок поста" required>
                     <textarea id="post-content" placeholder="Содержание поста" required></textarea>
-                    <input type="file" id="post-image" accept="image/*">
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="anonymous" name="anonymous">
-                        <label for="anonymous">Отправить анонимно</label>
-                    </div>
                     <button type="submit">Опубликовать</button>
                 </form>
                 <div id="posts"></div>
             </div>
         </main>
-        <footer>
-            <button class="nav-button" onclick="showAdminPanel()">Войти как админ</button>
-        </footer>
     </div>
 
     <script src="script.js"></script>
