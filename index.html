@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Форум</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Стили для кнопки экстренной перезагрузки */
+        #emergency-reboot-button {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <div id="loading" class="loading">
@@ -38,6 +49,8 @@
                 <div id="posts"></div>
             </div>
         </main>
+        
+        <button class="nav-button" id="emergency-reboot-button" onclick="showEmergencyReboot()">Экстренная перезагрузка серверов</button>
     </div>
 
     <div id="admin-panel" class="hidden">
