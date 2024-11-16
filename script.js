@@ -156,6 +156,7 @@ function logout() {
     currentUser = null; // Сбрасываем текущего пользователя
     isAdmin = false; // Сбрасываем флаг администратора
     document.getElementById("admin-panel-button").classList.add("hidden"); // Скрываем кнопку панели администратора
+    document.getElementById("admin-login-button").classList.remove("hidden"); // Показываем кнопку входа как администратор
     alert("Вы вышли из системы."); // Уведомление о выходе
     showLogin(); // Показать форму входа
 }
