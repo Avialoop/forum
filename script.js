@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("loading").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
         renderPosts();
-        updatePostTimer();
     }, 2000);
 });
 
@@ -101,13 +100,6 @@ function pinPost(postIndex) {
     alert("Пост закреплен.");
 }
 
-// Удалить все заблокированные посты
-function deleteAllBlockedPosts() {
-    posts = posts.filter(post => !post.isBlocked); // Фильтруем заблокированные посты
-    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
-    renderAdminPosts(); // Обновляем отображение постов в панели администратора
-}
-
 // Удаление поста по индексу
 function deletePostByIndex(index) {
     posts.splice(index, 1); // Удаляем пост из массива
@@ -130,6 +122,12 @@ function createPost(event) {
     const title = document.getElementById("post-title").value;
     const content = document.getElementById("post-content").value;
     const allowComments = document.getElementById("allow-comments").checked;
+
+    // Проверяем, вошел ли пользователь
+    if (!currentUser) {
+        alert("Сначала войдите в систему, чтобы опубликовать пост.");
+        return;
+    }
 
     const newPost = {
         title: title,
@@ -218,6 +216,27 @@ function handleRegistration(event) {
 function updateAccountInfo() {
     const accountInfo = document.getElementById("account-info");
     accountInfo.textContent = `Вход: ${currentUser}`;
+}
+
+// Отображение постов на главной странице
+function renderPosts() {
+    const postsContainer = document.getElementById("posts");
+    postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
+
+    posts.forEach(post => {
+        if (!post.isBlocked) { // Не отображаем заблокированные посты
+            const postElement = document.createElement("div");
+            postElement.classList.add("post");
+            postElement.innerHTML = `
+                <h3>${post.title}</h3>
+                <p>${post.content}</p>
+                <p>Автор: ${post.author}</p>
+                <p>${new Date(post.createdAt).toLocaleString()}</p>
+                ${post.allowComments ? '<p>Комментарии разрешены</p>' : '<p>Комментарии запрещены</p>'}
+            `;
+            postsContainer.appendChild(postElement); // Добавляем пост в контейнер
+        }
+    });
 }
 
 // Загрузка пользователей из localStorage при загрузке страницы
