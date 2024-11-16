@@ -1,4 +1,5 @@
 let isAdmin = false;
+let posts = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
@@ -41,6 +42,7 @@ function guestMode() {
 function showPostContainer() {
     document.getElementById("form-container").classList.add("hidden");
     document.getElementById("post-container").classList.remove("hidden");
+    renderPosts();
 }
 
 function showAdminPanel() {
@@ -61,7 +63,21 @@ function showAdminPanel() {
         <input type="text" id="user-id" placeholder="ID пользователя для блокировки">
         <button onclick="blockUser()">Заблокировать пользователя</button>
     `;
-    document.getElementById("app").appendChild(adminPanel);
+       document.getElementById("app").appendChild(adminPanel);
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+    // Здесь вы можете добавить логику проверки логина и пароля
+    alert("Вход выполнен!");
+    showPostContainer();
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    // Здесь вы можете добавить логику регистрации пользователя
+    alert("Регистрация успешна!");
+    showPostContainer();
 }
 
 function createPost(event) {
@@ -70,63 +86,89 @@ function createPost(event) {
     const title = document.getElementById("post-title").value;
     const content = document.getElementById("post-content").value;
     const image = document.getElementById("post-image").files[0];
+    const postAuthor = "пользователь"; // Здесь можно добавить имя текущего пользователя
 
-    const postElement = document.createElement("div");
-    postElement.classList.add("post");
-
-    const postTitle = document.createElement("h3");
-    postTitle.textContent = title;
-    postElement.appendChild(postTitle);
-
-    const postContent = document.createElement("p");
-    postContent.textContent = content;
-    postElement.appendChild(postContent);
-
-    if (image) {
-        const imgElement = document.createElement("img");
-        imgElement.src = URL.createObjectURL(image);
-        postElement.appendChild(imgElement);
-    }
-
-    // Добавляем кнопки редактирования и удаления
-    const editButton = document.createElement("button");
-    editButton.textContent = "Редактировать";
-    editButton.classList.add("edit-button");
-    editButton.onclick = function() {
-        editPost(postElement);
+    const post = {
+        title: title,
+        content: content,
+        image: image ? URL.createObjectURL(image) : null,
+        author: postAuthor
     };
-    postElement.appendChild(editButton);
 
-    const deleteButton = document.createElement("button");
-    deleteButton.textContent = "Удалить";
-    deleteButton.classList.add("delete-button");
-    deleteButton.onclick = function() {
-        postElement.remove();
-    };
-    postElement.appendChild(deleteButton);
-
-    document.getElementById("posts").prepend(postElement);
+    posts.push(post); // Добавляем пост в массив
+    renderPosts(); // Обновляем отображение постов
 
     // Сброс формы
     document.getElementById("post-form").reset();
 }
 
-function editPost(postElement) {
-    const title = postElement.querySelector("h3").textContent;
-    const content = postElement.querySelector("p").textContent;
+function renderPosts() {
+    const postsContainer = document.getElementById("posts");
+    postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
 
-    document.getElementById("post-title").value = title;
-    document.getElementById("post-content").value = content;
+    posts.forEach((post, index) => {
+        const postElement = document.createElement("div");
+        postElement.classList.add("post");
+
+        const postTitle = document.createElement("h3");
+        postTitle.textContent = post.title;
+        postElement.appendChild(postTitle);
+
+        const postContent = document.createElement("p");
+        postContent.textContent = post.content;
+        postElement.appendChild(postContent);
+
+        if (post.image) {
+            const imgElement = document.createElement("img");
+            imgElement.src = post.image;
+            postElement.appendChild(imgElement);
+        }
+
+        const authorElement = document.createElement("p");
+        authorElement.textContent = `Автор: ${post.author}`;
+        postElement.appendChild(authorElement);
+
+        // Добавляем кнопки редактирования и удаления
+        const editButton = document.createElement("button");
+        editButton.textContent = "Редактировать";
+        editButton.classList.add("edit-button");
+        editButton.onclick = function() {
+            editPost(index);
+        };
+        postElement.appendChild(editButton);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Удалить";
+        deleteButton.classList.add("delete-button");
+        deleteButton.onclick = function() {
+            deletePostByIndex(index);
+        };
+        postElement.appendChild(deleteButton);
+
+        postsContainer.prepend(postElement);
+    });
+}
+
+function editPost(index) {
+    const post = posts[index];
+    document.getElementById("post-title").value = post.title;
+    document.getElementById("post-content").value = post.content;
 
     // Удаляем пост, чтобы создать новый с обновленным содержанием
-    postElement.remove();
+    deletePostByIndex(index);
+}
+
+function deletePostByIndex(index) {
+    posts.splice(index, 1); // Удаляем пост из массива
+    renderPosts(); // Обновляем отображение постов
 }
 
 function deletePost() {
     const postId = document.getElementById("post-id").value;
-    const postElement = document.getElementById("posts").children[postId];
-    if (postElement) {
-        postElement.remove();
+    const index = parseInt(postId, 10);
+    if (index >= 0 && index < posts.length) {
+        posts.splice(index, 1); // Удаляем пост из массива
+        renderPosts(); // Обновляем отображение
         alert("Пост удален.");
     } else {
         alert("Пост не найден.");
