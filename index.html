@@ -19,6 +19,7 @@
                 <button class="nav-button" id="logout-button" onclick="logout()">Выйти</button>
                 <button class="nav-button" onclick="showAdminLogin()">Вход как админ</button>
                 <span id="account-info"></span>
+                <span id="post-timer"></span>
             </nav>
         </header>
         <main>
@@ -29,6 +30,9 @@
                 <form id="post-form" onsubmit="createPost(event)">
                     <input type="text" id="post-title" placeholder="Заголовок поста" required>
                     <textarea id="post-content" placeholder="Содержание поста" required></textarea>
+                    <label>
+                        <input type="checkbox" id="allow-comments"> Разрешить комментарии
+                    </label>
                     <button type="submit">Опубликовать</button>
                 </form>
                 <div id="posts"></div>
