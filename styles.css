@@ -21,7 +21,7 @@ nav {
     margin-top: 15px;
 }
 
-nav button {
+.nav-button {
     margin: 0 10px;
     padding: 10px 15px;
     border: none;
@@ -30,19 +30,35 @@ nav button {
     color: white;
     cursor: pointer;
     transition: background 0.3s;
+    font-size: 16px;
 }
 
-nav button:hover {
+.nav-button:hover {
     background: #005f99;
 }
 
 .loading {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
     font-size: 24px;
     color: #3498db;
+}
+
+.loader {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .hidden {
