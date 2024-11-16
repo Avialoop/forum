@@ -1,5 +1,6 @@
 let isAdmin = false; // Флаг для проверки, является ли пользователь администратором
 let posts = JSON.parse(localStorage.getItem('posts')) || []; // Получаем посты из localStorage
+let users = JSON.parse(localStorage.getItem('users')) || []; // Получаем пользователей из localStorage
 let currentUser = null; // Текущий пользователь, который вошел в систему
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,6 +33,7 @@ function showAdminLogin() {
     if (adminPin === "0852-7533") {
         isAdmin = true; // Устанавливаем флаг администратора
         alert("Добро пожаловать, администратор!");
+        document.getElementById("admin-panel-button").classList.remove("hidden"); // Показываем кнопку панели администратора
         openAdminPanel(); // Открываем панель администратора сразу после входа
     } else {
         alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
@@ -59,17 +61,44 @@ function renderAdminPosts() {
 
 // Показать действия для поста
 function showAdminPostActions(postIndex) {
-    const actions = confirm("Выберите действие:\n\n1. Удалить пост\n2. Заблокировать пост\n3. Удалить все заблокированные посты");
-    if (actions) {
-        const action = prompt("Введите номер действия (1, 2 или 3):");
-        if (action === "1") {
+    const action = prompt("Выберите действие:\n1. Удалить пост\n2. Заблокировать пост\n3. Продлить срок жизни поста\n4. Закрепить пост");
+    switch (action) {
+        case "1":
             deletePostByIndex(postIndex); // Удалить пост
-        } else if (action === "2") {
+            break;
+        case "2":
             blockPost(postIndex); // Заблокировать пост
-        } else if (action === "3") {
-            deleteAllBlockedPosts(); // Удалить все заблокированные посты
-        }
+            break;
+        case "3":
+            extendPostLife(postIndex); // Продлить срок жизни поста
+            break;
+        case "4":
+            pinPost(postIndex); // Закрепить пост
+            break;
+        default:
+            alert("Некорректный выбор действия.");
     }
+}
+
+// Продлить срок жизни поста
+function extendPostLife(postIndex) {
+    const days = parseInt(prompt("На сколько дней продлить срок жизни поста?"), 10);
+    if (!isNaN(days) && days > 0) {
+        posts[postIndex].createdAt += days * 24 * 60 * 60 * 1000; // Продление срока жизни
+        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+        renderAdminPosts(); // Обновляем отображение постов в панели администратора
+        alert(`Срок жизни поста продлен на ${days} дней.`);
+    } else {
+        alert("Некорректное значение.");
+    }
+}
+
+// Закрепить пост
+function pinPost(postIndex) {
+    posts[postIndex].isPinned = true; // Устанавливаем флаг закрепления
+    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+    renderAdminPosts(); // Обновляем отображение постов в панели администратора
+    alert("Пост закреплен.");
 }
 
 // Удалить все заблокированные посты
@@ -95,228 +124,38 @@ function blockPost(index) {
     renderAdminPosts(); // Обновляем отображение постов в панели администратора
 }
 
-// Остальная логика (вход, регистрация и т.д.) остается без изменений...
+// Создание поста
+function createPost(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    const title = document.getElementById("post-title").value;
+    const content = document.getElementById("post-content").value;
+    const allowComments = document.getElementById("allow-comments").checked;
 
+    const newPost = {
+        title: title,
+        content: content,
+        author: currentUser,
+        createdAt: new Date().getTime(),
+        allowComments: allowComments,
+        isBlocked: false,
+        isPinned: false
+    };
 
+    posts.push(newPost); // Добавляем новый пост в массив
+    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+    renderPosts(); // Обновляем отображение постов на главной странице
 
-// Остальная логика (вход, регистрация и т.д.) остается без изменений...
-
-// Функция для обновления таймера
-function updatePostTimer() {
-    setInterval(() => {
-        const currentTime = new Date().getTime();
-        posts.forEach((post, index) => {
-            const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
-            if (timeLeft === 0 && !post.isBlocked) {
-                deletePostByIndex(index);
-            }
-        });
-        renderPosts(); // Обновляем отображение постов
-    }, 1000);
-}
-
-// Отображение постов
-function renderPosts() {
-    const postsContainer = document.getElementById("posts");
-    postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
-
-    posts.forEach((post, index) => {
-        const postElement = document.createElement("div");
-        postElement.classList.add("post");
-
-        // Вычисляем оставшееся время до удаления
-        const currentTime = new Date().getTime();
-        const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
-        const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-        const hoursLeft = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-        // Добавляем заголовок поста
-        const postTitle = document.createElement("h3");
-        postTitle.textContent = post.title; // Заголовок поста
-        postElement.appendChild(postTitle); // Добавляем заголовок в пост
-
-        // Показ времени до удаления
-        const timeDisplay = document.createElement("span");
-        timeDisplay.textContent = `Осталось: ${daysLeft}д ${hoursLeft}ч ${minutesLeft}м`;
-        timeDisplay.classList.add("time-display");
-        postElement.appendChild(timeDisplay); // Добавляем отображение времени
-
-        postElement.onclick = function () {
-            showPostDetails(index); // Показать детали поста при клике
-        };
-
-        // Проверяем, заблокирован ли пост
-        if (post.isBlocked) {
-            postElement.classList.add("blocked"); // Добавляем класс для блокированных постов
-            postElement.innerHTML += `<p>Пост заблокирован.</p>`;
-        } else {
-            const postContent = document.createElement("p");
-            postContent.textContent = post.content; // Содержание поста
-            postElement.appendChild(postContent); // Добавляем содержание в пост
-
-            const authorElement = document.createElement("p");
-            authorElement.textContent = `Автор: ${post.author}`; // Автор поста
-            postElement.appendChild(authorElement); // Добавляем автора в пост
-
-            const postDate = new Date(post.createdAt); // Дата создания поста
-            const dateElement = document.createElement("p");
-            dateElement.textContent = `Создано: ${postDate.toLocaleString()}`; // Форматируем дату
-            postElement.appendChild(dateElement); // Добавляем дату в пост
-
-            // Добавляем кнопки редактирования, удаления и блокировки
-            if (isAdmin) {
-                const blockButton = document.createElement("button");
-                blockButton.textContent = "Заблокировать"; // Текст кнопки блокировки
-                blockButton.classList.add("block-button");
-                blockButton.onclick = function () {
-                    blockPost(index); // Вызов функции блокировки
-                };
-                postElement.appendChild(blockButton); // Добавляем кнопку блокировки
-
-                const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Удалить"; // Текст кнопки удаления
-                deleteButton.classList.add("delete-button");
-                deleteButton.onclick = function () {
-                    deletePostByIndex(index); // Вызов функции удаления
-                };
-                postElement.appendChild(deleteButton); // Добавляем кнопку удаления
-            }
-
-            // Добавление секции комментариев
-            if (post.comments) {
-                const commentSection = document.createElement("div");
-                commentSection.classList.add("comment-section");
-
-                const commentInput = document.createElement("input");
-                commentInput.placeholder = "Ваш комментарий";
-                commentInput.className = "comment-input";
-
-                const commentButton = document.createElement("button");
-                commentButton.textContent = "Добавить комментарий";
-                commentButton.onclick = function () {
-                    addComment(index, commentInput.value); // Вызов функции добавления комментария
-                    commentInput.value = ""; // Сброс поля ввода
-                };
-
-                commentSection.appendChild(commentInput);
-                commentSection.appendChild(commentButton);
-
-                // Отображение комментариев
-                post.comments.forEach(comment => {
-                    const commentElement = document.createElement("div");
-                    commentElement.classList.add("comment");
-                    commentElement.textContent = comment;
-                    commentSection.appendChild(commentElement);
-                });
-
-                postElement.appendChild(commentSection); // Добавляем секцию комментариев в пост
-            }
-        }
-
-        postsContainer.appendChild(postElement); // Добавляем пост в контейнер
-    });
-}
-
-// Функция для показа деталей поста
-function showPostDetails(postIndex) {
-    const post = posts[postIndex];
-    const postDetailContainer = document.createElement("div");
-    postDetailContainer.className = "post-detail";
-
-    postDetailContainer.innerHTML = `
-        <h3>${post.title}</h3>
-        <p>${post.content}</p>
-        <p>Автор: ${post.author}</p>
-        <p>Создано: ${new Date(post.createdAt).toLocaleString()}</p>
-        <button onclick="closePostDetails()">Закрыть</button>
-    `;
-
-    document.body.appendChild(postDetailContainer); // Добавляем детали поста в тело
-}
-
-// Функция для закрытия деталей поста
-function closePostDetails() {
-    const postDetailContainer = document.querySelector(".post-detail");
-    if (postDetailContainer) {
-        document.body.removeChild(postDetailContainer); // Удаляем детали поста
-    }
-}
-
-// Функция добавления комментария
-function addComment(postIndex, comment) {
-    if (comment.trim() !== "") {
-        posts[postIndex].comments.push(comment); // Добавляем комментарий в пост
-        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
-        renderPosts(); // Обновляем отображение постов
-    }
-}
-
-// Блокировка поста
-function blockPost(index) {
-    posts[index].isBlocked = true; // Устанавливаем флаг блокировки
-    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
-    renderPosts(); // Обновляем отображение постов
-}
-
-// Удаление поста по индексу
-function deletePostByIndex(index) {
-    posts.splice(index, 1); // Удаляем пост из массива
-    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
-    renderPosts(); // Обновляем отображение постов
-}
-
-// Показать страницу входа администратора
-function showAdminLogin() {
-    const adminPin = prompt("Введите ПИН-код администратора:"); // Запрашиваем пин-код
-    if (adminPin === "0852-7533") {
-        isAdmin = true; // Устанавливаем флаг администратора
-        alert("Добро пожаловать, администратор!");
-        showAdminPanel(); // Показываем панель администратора
-    } else {
-        alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
-    }
-}
-
-// Показать панель администратора
-function showAdminPanel() {
-    const adminPanel = document.createElement("div");
-    adminPanel.classList.add("admin-panel");
-    adminPanel.innerHTML = `
-        <h2>Панель администратора</h2>
-        <button onclick="clearPosts()">Очистить все посты</button>
-        <button onclick="extendPostTime()">Продлить время постов</button>
-    `;
-    document.getElementById("app").appendChild(adminPanel); // Добавляем админ-панель в приложение
-}
-
-// Очистка всех постов
-function clearPosts() {
-    if (confirm("Вы уверены, что хотите удалить все посты?")) {
-        posts = []; // Очищаем массив постов
-        localStorage.removeItem('posts'); // Удаляем данные из localStorage
-        renderPosts(); // Обновляем отображение
-        alert("Все посты удалены."); // Уведомление об удалении
-    }
-}
-
-// Продление времени постов
-function extendPostTime() {
-    const extendDays = parseInt(prompt("На сколько дней продлить время хранения постов?"), 10);
-    if (extendDays > 0) {
-        const currentTime = new Date().getTime();
-        posts.forEach(post => {
-            post.createdAt += extendDays * 24 * 60 * 60 * 1000; // Продляем время жизни постов
-        });
-        localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
-        renderPosts(); // Обновляем отображение
-        alert(`Время хранения постов продлено на ${extendDays} дней.`); // Уведомление о продлении
-    }
+    // Очищаем поля ввода после публикации
+    document.getElementById("post-title").value = "";
+    document.getElementById("post-content").value = "";
+    document.getElementById("allow-comments").checked = false;
 }
 
 // Логика выхода из аккаунта
 function logout() {
     currentUser = null; // Сбрасываем текущего пользователя
+    isAdmin = false; // Сбрасываем флаг администратора
+    document.getElementById("admin-panel-button").classList.add("hidden"); // Скрываем кнопку панели администратора
     alert("Вы вышли из системы."); // Уведомление о выходе
     showLogin(); // Показать форму входа
 }
@@ -340,11 +179,11 @@ function handleLogin(event) {
     currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
     alert("Вход выполнен!"); // Уведомление о входе
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
-    showPostContainer(); // Показать контейнер с постами
+    document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin); // Показываем или скрываем кнопку панели администратора
     updateAccountInfo(); // Обновляем информацию о текущем пользователе
 }
 
-// Обработка логики регистрации
+// Показать форму регистрации
 function showRegistration() {
     document.getElementById("form-container").innerHTML = `
         <h2>Регистрация</h2>
@@ -359,6 +198,17 @@ function showRegistration() {
 // Обработка логики регистрации
 function handleRegistration(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
+    const newUsername = document.getElementById("new-username").value;
+
+    // Проверяем, существует ли пользователь с таким именем
+    if (users.some(user => user.username === newUsername)) {
+        alert("Пользователь с таким именем уже существует!");
+        return;
+    }
+
+    // Добавляем нового пользователя
+    users.push({ username: newUsername, isBlocked: false });
+    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем изменения в localStorage
     alert("Регистрация успешна!"); // Уведомление о регистрации
     showLogin(); // Показать форму входа после регистрации
 }
@@ -369,17 +219,15 @@ function updateAccountInfo() {
     accountInfo.textContent = `Вход: ${currentUser}`;
 }
 
-// Показать контейнер с постами
-function showPostContainer() {
-    document.getElementById("form-container").classList.add("hidden"); // Скрыть форму
-    document.getElementById("post-container").classList.remove("hidden"); // Показать контейнер с постами
-}
-
-// Загрузка постов из localStorage при загрузке страницы
+// Загрузка пользователей из localStorage при загрузке страницы
 window.onload = function() {
     const savedPosts = JSON.parse(localStorage.getItem('posts'));
     if (savedPosts) {
         posts = savedPosts; // Загружаем сохраненные посты
         renderPosts(); // Отображаем посты
+    }
+    const savedUsers = JSON.parse(localStorage.getItem('users'));
+    if (savedUsers) {
+        users = savedUsers; // Загружаем сохраненных пользователей
     }
 };
