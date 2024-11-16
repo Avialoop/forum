@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000); // Анимация загрузки на 2 секунды
 });
 
-// Отображение формы входа
+// Показываем форму входа
 function showLogin() {
     document.getElementById("form-container").innerHTML = `
         <h2>Вход</h2>
@@ -26,10 +26,9 @@ function showLogin() {
 
 // Обработка логики входа
 function handleLogin(event) {
-    event.preventDefault();
-    // Здесь можно добавить логику проверки логина и пароля
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
     currentUser = "Пользователь"; // Установите текущего пользователя; заменить на реальную логику
-    alert("Вход выполнен!");
+    alert("Вход выполнен!"); // Уведомление о входе
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
     showPostContainer(); // Показать контейнер с постами
 }
@@ -45,29 +44,32 @@ function showPostContainer() {
 function createPost(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
 
-    const title = document.getElementById("post-title").value; // Получаем заголовок
-    const content = document.getElementById("post-content").value; // Получаем содержание
-    const image = document.getElementById("post-image").files[0]; // Получаем изображение
-    const isAnonymous = document.getElementById("anonymous").checked; // Проверяем, отправлено ли анонимно
-    const postAuthor = isAnonymous ? "Аноним" : currentUser; // Устанавливаем автора
+    const title = document.getElementById("post-title").value; // Получаем заголовок поста
+    const content = document.getElementById("post-content").value; // Получаем содержание поста
 
     const post = {
         title: title,
         content: content,
-        image: image ? URL.createObjectURL(image) : null, // Если изображение существует, создаем URL
-        author: postAuthor
+        createdAt: new Date().getTime(), // Время создания поста
+        author: currentUser // Автор поста
     };
 
     posts.push(post); // Добавляем пост в массив
     renderPosts(); // Обновляем отображение постов
 
-    document.getElementById("post-form").reset(); // Сбрасываем форму
+    document.getElementById("post-form").reset(); // Сброс формы
 }
 
 // Отображение постов
 function renderPosts() {
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
+
+    // Фильтруем посты, которые старше 7 дней
+    posts = posts.filter(post => {
+        const currentTime = new Date().getTime(); // Текущее время
+        return currentTime - post.createdAt <= 7 * 24 * 60 * 60 * 1000; // Сохраняем только посты, которым не больше 7 дней
+    });
 
     posts.forEach((post, index) => {
         const postElement = document.createElement("div");
@@ -81,35 +83,33 @@ function renderPosts() {
         postContent.textContent = post.content; // Содержание поста
         postElement.appendChild(postContent); // Добавляем содержание в пост
 
-        if (post.image) {
-            const imgElement = document.createElement("img");
-            imgElement.src = post.image; // Изображение поста
-            postElement.appendChild(imgElement); // Добавляем изображение в пост
-        }
-
         const authorElement = document.createElement("p");
         authorElement.textContent = `Автор: ${post.author}`; // Автор поста
         postElement.appendChild(authorElement); // Добавляем автора в пост
 
-        // Кнопка редактировать
+        const postDate = new Date(post.createdAt); // Дата создания поста
+        const dateElement = document.createElement("p");
+        dateElement.textContent = `Создано: ${postDate.toLocaleString()}`; // Форматируем дату
+        postElement.appendChild(dateElement); // Добавляем дату в пост
+
+        // Добавляем кнопки редактирования и удаления
         const editButton = document.createElement("button");
-        editButton.textContent = "Редактировать"; // Текст кнопки
+        editButton.textContent = "Редактировать"; // Текст кнопки редактирования
         editButton.classList.add("edit-button");
         editButton.onclick = function() {
             editPost(index); // Вызов функции редактирования
         };
-        postElement.appendChild(editButton); // Добавляем кнопку редактирования в пост
+        postElement.appendChild(editButton); // Добавляем кнопку редактирования
 
-        // Кнопка удалить
         const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Удалить"; // Текст кнопки
+        deleteButton.textContent = "Удалить"; // Текст кнопки удаления
         deleteButton.classList.add("delete-button");
         deleteButton.onclick = function() {
             deletePostByIndex(index); // Вызов функции удаления
         };
-        postElement.appendChild(deleteButton); // Добавляем кнопку удаления в пост
+        postElement.appendChild(deleteButton); // Добавляем кнопку удаления
 
-        postsContainer.prepend(postElement); // Добавляем пост в начало контейнера
+        postsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
 }
 
@@ -129,26 +129,6 @@ function deletePostByIndex(index) {
     renderPosts(); // Обновляем отображение постов
 }
 
-// Удаление поста через админ-панель
-function deletePost() {
-    const postId = document.getElementById("post-id").value; // Получаем ID поста
-    const index = parseInt(postId, 10); // Преобразуем в число
-    if (index >= 0 && index < posts.length) {
-        posts.splice(index, 1); // Удаляем пост из массива
-        renderPosts(); // Обновляем отображение
-        alert("Пост удален."); // Уведомление об удалении
-    } else {
-        alert("Пост не найден."); // Уведомление о том, что пост не найден
-    }
-}
-
-// Блокировка пользователя через админ-панель
-function blockUser() {
-    const userId = document.getElementById("user-id").value; // Получаем ID пользователя
-    alert(`Пользователь с ID ${userId} заблокирован.`); // Уведомление о блокировке
-    // Здесь можно добавить логику для блокировки пользователя
-}
-
 // Показать админ-панель
 function showAdminPanel() {
     if (isAdmin) {
@@ -157,18 +137,26 @@ function showAdminPanel() {
     }
 
     isAdmin = true; // Устанавливаем флаг администратора
-    document.getElementById("post-container").classList.add("hidden"); // Скрываем контейнер с постами
-
     const adminPanel = document.createElement("div");
     adminPanel.classList.add("admin-panel");
     adminPanel.innerHTML = `
         <h2>Админ Панель</h2>
         <input type="text" id="post-id" placeholder="ID поста для удаления">
         <button onclick="deletePost()">Удалить пост</button>
-        <input type="text" id="user-id" placeholder="ID пользователя для блокировки">
-        <button onclick="blockUser()">Заблокировать пользователя</button>
     `;
     document.getElementById("app").appendChild(adminPanel); // Добавляем админ-панель в приложение
+}
+
+// Удаление поста через админ-панель
+function deletePost() {
+    const postId = parseInt(document.getElementById("post-id").value, 10); // Получаем ID поста
+    if (postId >= 0 && postId < posts.length) {
+        posts.splice(postId, 1); // Удаляем пост из массива
+        renderPosts(); // Обновляем отображение
+        alert("Пост удален."); // Уведомление об удалении
+    } else {
+        alert("Пост не найден."); // Уведомление о том, что пост не найден
+    }
 }
 
 // Логика выхода из аккаунта
