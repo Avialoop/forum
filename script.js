@@ -48,7 +48,7 @@ function showAdminPanel() {
         alert("Вы уже вошли как администратор.");
         return;
     }
-    
+
     isAdmin = true;
     document.getElementById("post-container").classList.add("hidden");
 
@@ -88,6 +88,7 @@ function createPost(event) {
         postElement.appendChild(imgElement);
     }
 
+    // Добавляем кнопки редактирования и удаления
     const editButton = document.createElement("button");
     editButton.textContent = "Редактировать";
     editButton.classList.add("edit-button");
@@ -117,7 +118,8 @@ function editPost(postElement) {
     document.getElementById("post-title").value = title;
     document.getElementById("post-content").value = content;
 
-    postElement.remove(); // Удаляем пост, чтобы создать новый с обновленным содержанием
+    // Удаляем пост, чтобы создать новый с обновленным содержанием
+    postElement.remove();
 }
 
 function deletePost() {
