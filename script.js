@@ -1,6 +1,7 @@
 let isAdmin = false; // Флаг для проверки, является ли пользователь администратором
 let posts = JSON.parse(localStorage.getItem('posts')) || []; // Получаем посты из localStorage
 let currentUser = null; // Текущий пользователь, который вошел в систему
+let timerInterval; // Переменная для таймера
 
 document.addEventListener("DOMContentLoaded", () => {
     // Скрываем основной контент до загрузки
@@ -8,82 +9,57 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("loading").classList.add("hidden"); // Скрываем анимацию загрузки
         document.getElementById("app").classList.remove("hidden"); // Показываем приложение
         renderPosts(); // Отображаем посты при загрузке
+        updatePostTimer(); // Запускаем таймер
     }, 2000); // Анимация загрузки на 2 секунды
 });
 
-// Показываем форму регистрации или входа
-function showLogin() {
-    document.getElementById("form-container").innerHTML = `
-        <h2>Вход</h2>
-        <form onsubmit="handleLogin(event)">
-            <input type="text" placeholder="Логин" required>
-            <input type="password" placeholder="Пароль" required>
-            <button type="submit">Войти</button>
-        </form>
-        <button onclick="showRegistration()">Нет аккаунта? Зарегистрироваться</button>
-    `;
-    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму входа
-    document.getElementById("post-container").classList.add("hidden"); // Скрываем контейнер с постами
+// Функция для обновления таймера
+function updatePostTimer() {
+    timerInterval = setInterval(() => {
+        const currentTime = new Date().getTime();
+        posts.forEach((post, index) => {
+            const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime); // 7 дней
+            if (timeLeft === 0 && !post.isBlocked) {
+                deletePostByIndex(index); // Удаляем пост по истечении времени
+            }
+        });
+        updateTimerDisplay(); // Обновляем отображение таймера
+    }, 1000); // Обновляем каждую секунду
 }
 
-// Показываем форму регистрации
-function showRegistration() {
-    document.getElementById("form-container").innerHTML = `
-        <h2>Регистрация</h2>
-        <form onsubmit="handleRegistration(event)">
-            <input type="text" placeholder="Логин" required>
-            <input type="password" placeholder="Пароль" required>
-            <button type="submit">Зарегистрироваться</button>
-        </form>
-        <button onclick="showLogin()">Уже есть аккаунт? Войти</button>
-    `;
+// Функция для обновления отображения таймера
+function updateTimerDisplay() {
+    const currentTime = new Date().getTime();
+    let totalTimeLeft = 0;
+
+    posts.forEach(post => {
+        const timeLeft = Math.max(0, post.createdAt + 7 * 24 * 60 * 60 * 1000 - currentTime);
+        totalTimeLeft += timeLeft;
+    });
+
+    const daysLeft = Math.floor(totalTimeLeft / (1000 * 60 * 60 * 24));
+    const hoursLeft = Math.floor((totalTimeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutesLeft = Math.floor((totalTimeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    
+    const timerDisplay = document.getElementById("post-timer");
+    timerDisplay.textContent = `Осталось времени: ${daysLeft}д ${hoursLeft}ч ${minutesLeft}м`;
 }
 
-// Обработка логики входа
-function handleLogin(event) {
-    event.preventDefault(); // Предотвращаем перезагрузку страницы
-    // Здесь должна быть логика для проверки пользователя, временно добавим заглушку
-    currentUser = "Пользователь"; // Установите текущего пользователя; заменить на реальную логику
-    alert("Вход выполнен!"); // Уведомление о входе
-    document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
-    showPostContainer(); // Показать контейнер с постами
-    updateAccountInfo(); // Обновляем информацию о текущем пользователе
-}
-
-// Обработка логики регистрации
-function handleRegistration(event) {
-    event.preventDefault(); // Предотвращаем перезагрузку страницы
-    // Здесь должна быть логика для регистрации пользователя
-    alert("Регистрация успешна!"); // Уведомление о регистрации
-    showLogin(); // Показать форму входа после регистрации
-}
-
-// Обновление информации о текущем пользователе
-function updateAccountInfo() {
-    const accountInfo = document.getElementById("account-info");
-    accountInfo.textContent = `Вход: ${currentUser}`;
-}
-
-// Показать контейнер с постами
-function showPostContainer() {
-    document.getElementById("form-container").classList.add("hidden"); // Скрыть форму
-    document.getElementById("post-container").classList.remove("hidden"); // Показать контейнер с постами
-    renderPosts(); // Отобразить посты
-}
-
-// Создание поста
+// Показать форму создания поста
 function createPost(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
 
     const title = document.getElementById("post-title").value; // Получаем заголовок поста
     const content = document.getElementById("post-content").value; // Получаем содержание поста
+    const allowComments = document.getElementById("allow-comments").checked; // Получаем флаг комментариев
 
     const post = {
         title: title,
         content: content,
         createdAt: new Date().getTime(), // Время создания поста
         author: currentUser, // Автор поста
-        isBlocked: false // Флаг блокировки поста
+        isBlocked: false, // Флаг блокировки поста
+        comments: allowComments ? [] : null // Список комментариев, если разрешены
     };
 
     posts.push(post); // Добавляем пост в массив
@@ -102,6 +78,7 @@ function renderPosts() {
         const postElement = document.createElement("div");
         postElement.classList.add("post");
 
+        // Проверяем, заблокирован ли пост
         if (post.isBlocked) {
             postElement.classList.add("blocked"); // Добавляем класс для блокированных постов
             postElement.innerHTML = `
@@ -127,13 +104,15 @@ function renderPosts() {
             postElement.appendChild(dateElement); // Добавляем дату в пост
 
             // Добавляем кнопки редактирования, удаления и блокировки
-            const blockButton = document.createElement("button");
-            blockButton.textContent = "Заблокировать"; // Текст кнопки блокировки
-            blockButton.classList.add("block-button");
-            blockButton.onclick = function() {
-                blockPost(index); // Вызов функции блокировки
-            };
-            postElement.appendChild(blockButton); // Добавляем кнопку блокировки
+            if (isAdmin) {
+                const blockButton = document.createElement("button");
+                blockButton.textContent = "Заблокировать"; // Текст кнопки блокировки
+                blockButton.classList.add("block-button");
+                blockButton.onclick = function() {
+                    blockPost(index); // Вызов функции блокировки
+                };
+                postElement.appendChild(blockButton); // Добавляем кнопку блокировки
+            }
 
             const editButton = document.createElement("button");
             editButton.textContent = "Редактировать"; // Текст кнопки редактирования
@@ -150,10 +129,49 @@ function renderPosts() {
                 deletePostByIndex(index); // Вызов функции удаления
             };
             postElement.appendChild(deleteButton); // Добавляем кнопку удаления
+
+            // Добавление секции комментариев
+            if (post.comments) {
+                const commentSection = document.createElement("div");
+                commentSection.classList.add("comment-section");
+
+                const commentInput = document.createElement("input");
+                commentInput.placeholder = "Ваш комментарий";
+                commentInput.className = "comment-input";
+
+                const commentButton = document.createElement("button");
+                commentButton.textContent = "Добавить комментарий";
+                commentButton.onclick = function() {
+                    addComment(index, commentInput.value); // Вызов функции добавления комментария
+                    commentInput.value = ""; // Сброс поля ввода
+                };
+
+                commentSection.appendChild(commentInput);
+                commentSection.appendChild(commentButton);
+
+                // Отображение комментариев
+                post.comments.forEach(comment => {
+                    const commentElement = document.createElement("div");
+                    commentElement.classList.add("comment");
+                    commentElement.textContent = comment;
+                    commentSection.appendChild(commentElement);
+                });
+
+                postElement.appendChild(commentSection); // Добавляем секцию комментариев в пост
+            }
         }
 
         postsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
+}
+
+// Функция добавления комментария
+function addComment(postIndex, comment) {
+    if (comment.trim() !== "") {
+        posts[postIndex].comments.push(comment); // Добавляем комментарий в пост
+        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+        renderPosts(); // Обновляем отображение постов
+    }
 }
 
 // Блокировка поста
@@ -186,9 +204,7 @@ function showAdminLogin() {
     if (adminPin === "0852-7533") {
         isAdmin = true; // Устанавливаем флаг администратора
         alert("Добро пожаловать, администратор!");
-        // Здесь можно перенаправить на страницу управления администратором
-        // Например, показать панель управления
-        showAdminPanel();
+        showAdminPanel(); // Показываем панель администратора
     } else {
         alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
     }
@@ -235,4 +251,62 @@ function logout() {
     currentUser = null; // Сбрасываем текущего пользователя
     alert("Вы вышли из системы."); // Уведомление о выходе
     showLogin(); // Показать форму входа
+}
+
+// Показать форму входа
+function showLogin() {
+    document.getElementById("form-container").innerHTML = `
+        <h2>Вход</h2>
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <input type="text" id="username" placeholder="Имя пользователя" required>
+            <button type="submit">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="showRegistration()">Зарегистрируйтесь</a></p>
+        </form>
+    `;
+    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму
+}
+
+// Обработка логики входа
+function handleLogin(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+
+    // Здесь должна быть логика для проверки пользователя, временно добавим заглушку
+    currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
+    alert("Вход выполнен!"); // Уведомление о входе
+    document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
+    showPostContainer(); // Показать контейнер с постами
+    updateAccountInfo(); // Обновляем информацию о текущем пользователе
+}
+
+// Обработка логики регистрации
+function showRegistration() {
+    document.getElementById("form-container").innerHTML = `
+        <h2>Регистрация</h2>
+        <form id="registration-form" onsubmit="handleRegistration(event)">
+            <input type="text" id="new-username" placeholder="Имя пользователя" required>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    `;
+    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму
+}
+
+// Обработка логики регистрации
+function handleRegistration(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    // Здесь должна быть логика для регистрации пользователя
+    alert("Регистрация успешна!"); // Уведомление о регистрации
+    showLogin(); // Показать форму входа после регистрации
+}
+
+// Обновление информации о текущем пользователе
+function updateAccountInfo() {
+    const accountInfo = document.getElementById("account-info");
+    accountInfo.textContent = `Вход: ${currentUser}`;
+}
+
+// Показать контейнер с постами
+function showPostContainer() {
+    document.getElementById("form-container").classList.add("hidden"); // Скрыть форму
+    document.getElementById("post-container").classList.remove("hidden"); // Показать контейнер с постами
+    renderPosts(); // Отобразить посты
 }
