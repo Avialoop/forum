@@ -81,12 +81,12 @@ function showAdminPostActions(postIndex) {
 
 // Продлить срок жизни поста
 function extendPostLife(postIndex) {
-    const days = parseInt(prompt("На сколько дней продлить срок жизни поста?"), 10);
-    if (!isNaN(days) && days > 0) {
-        posts[postIndex].createdAt += days * 24 * 60 * 60 * 1000; // Продление срока жизни
+    const seconds = parseInt(prompt("На сколько секунд продлить срок жизни поста?"), 10);
+    if (!isNaN(seconds) && seconds > 0) {
+        posts[postIndex].createdAt += seconds * 1000; // Продление срока жизни
         localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
         renderAdminPosts(); // Обновляем отображение постов в панели администратора
-        alert(`Срок жизни поста продлен на ${days} дней.`);
+        alert(`Срок жизни поста продлен на ${seconds} секунд.`);
     } else {
         alert("Некорректное значение.");
     }
@@ -134,10 +134,11 @@ function createPost(event) {
         title: title,
         content: content,
         author: currentUser,
-        createdAt: new Date().getTime() + 24 * 60 * 60 * 1000, // Устанавливаем время жизни поста на 24 часа
+        createdAt: Date.now() + 24 * 60 * 60 * 1000, // Устанавливаем время жизни поста на 24 часа
         allowComments: allowComments,
         isBlocked: false,
-        isPinned: false
+        isPinned: false,
+        comments: [] // Инициализируем массив комментариев
     };
 
     posts.push(newPost); // Добавляем новый пост в массив
@@ -181,44 +182,7 @@ function handleLogin(event) {
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
     document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin);
     updateAccountInfo(); // Обновляем информацию о текущем пользователе
-    checkForPinnedPosts(); // Проверяем наличие закрепленных постов и уведомляем пользователя
-}
-
-// Показать форму регистрации
-function showRegistration() {
-    document.getElementById("form-container").innerHTML = `
-        <h2>Регистрация</h2>
-        <form id="registration-form" onsubmit="handleRegistration(event)">
-            <input type="text" id="new-username" placeholder="Имя пользователя" required>
-            <button type="submit">Зарегистрироваться</button>
-        </form>
-    `;
-    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму
-}
-
-// Обработка логики регистрации
-function handleRegistration(event) {
-    event.preventDefault(); // Предотвращаем перезагрузку страницы
-    const newUsername = document.getElementById("new-username").value; // Получаем новое имя пользователя
-
-    // Проверяем, существует ли уже пользователь
-    if (users.includes(newUsername)) {
-        alert("Пользователь с таким именем уже существует.");
-        return;
-    }
-
-    users.push(newUsername); // Добавляем нового пользователя в массив
-    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем пользователей в localStorage
-    alert("Регистрация успешна! Теперь вы можете войти."); // Уведомление об успешной регистрации
-    showLogin(); // Показать форму входа
-}
-
-// Обновление информации о текущем пользователе
-function updateAccountInfo() {
-    const accountInfo = document.getElementById("account-info");
-    accountInfo.textContent = currentUser ? `Вы вошли как: ${currentUser}` : "Вы не вошли в систему.";
-}
-
+    checkForPinnedPosts(); // Проверяем наличие закрепленых сбщ
 // Проверка на наличие закрепленных постов
 function checkForPinnedPosts() {
     const pinnedPosts = posts.filter(post => post.isPinned);
@@ -233,23 +197,39 @@ function renderPosts() {
     postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
 
     posts.forEach((post) => {
-        if (!post.isBlocked) { // Проверяем, не заблокирован ли пост
-            const postElement = document.createElement("div");
-            postElement.classList.add("post");
+        const postElement = document.createElement("div");
+        postElement.classList.add("post");
+        
+        if (post.isBlocked) {
+            postElement.classList.add("blocked"); // Добавляем класс для заблокированных постов
+            postElement.innerHTML = `
+                <h3 style="text-decoration: line-through; color: red;">${post.title} 🚧</h3>
+                <p style="color: red;">Этот пост заблокирован администратором.</p>
+            `;
+        } else {
             if (post.isPinned) {
                 postElement.classList.add("pinned"); // Добавляем класс для закрепленных постов
             }
+
+            const timeLeft = Math.max(0, Math.floor((post.createdAt - Date.now()) / 1000)); // Оставшееся время в секундах
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
 
             postElement.innerHTML = `
                 <h3>${post.title}</h3>
                 <p>${post.content}</p>
                 <p>Автор: ${post.author}</p>
                 <p>Дата: ${new Date(post.createdAt).toLocaleString()}</p>
-                <p>Осталось времени: ${Math.max(0, Math.floor((post.createdAt - Date.now()) / (1000 * 60 * 60 * 24)))} дней</p>
-                ${post.allowComments ? "<button onclick='enableComments()'>Комментировать</button>" : ""}
+                <p>Осталось времени: ${minutes} минут ${seconds} секунд</p>
+                ${post.allowComments ? `<button onclick="toggleComments(${posts.indexOf(post)})">Показать комментарии</button>
+                <div id="comments-${posts.indexOf(post)}" style="display:none;">
+                    <input type="text" id="comment-input-${posts.indexOf(post)}" placeholder="Ваш комментарий">
+                    <button onclick="addComment(${posts.indexOf(post)})">Добавить</button>
+                    <div id="comment-list-${posts.indexOf(post)}"></div>
+                </div>` : ""}
             `;
-            postsContainer.appendChild(postElement); // Добавляем пост в контейнер
         }
+        postsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
 
     // Удаляем посты, которые истекли
@@ -261,6 +241,39 @@ function removeExpiredPosts() {
     const currentTime = Date.now();
     posts = posts.filter(post => post.createdAt > currentTime); // Оставляем только те посты, которые еще не истекли
     localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
+}
+
+// Включить/выключить комментарии
+function toggleComments(postIndex) {
+    const commentsDiv = document.getElementById(`comments-${postIndex}`);
+    commentsDiv.style.display = commentsDiv.style.display === "none" ? "block" : "none"; // Переключаем видимость комментариев
+}
+
+// Добавить комментарий
+function addComment(postIndex) {
+    const commentInput = document.getElementById(`comment-input-${postIndex}`);
+    const commentText = commentInput.value;
+
+    if (commentText) {
+        posts[postIndex].comments.push({ author: currentUser, text: commentText }); // Добавляем комментарий в массив
+        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+        renderComments(postIndex); // Обновляем отображение комментариев
+        commentInput.value = ""; // Очищаем поле ввода комментария
+    } else {
+        alert("Комментарий не может быть пустым.");
+    }
+}
+
+// Отображение комментариев
+function renderComments(postIndex) {
+    const commentList = document.getElementById(`comment-list-${postIndex}`);
+    commentList.innerHTML = ""; // Очищаем список комментариев
+
+    posts[postIndex].comments.forEach(comment => {
+        const commentElement = document.createElement("div");
+        commentElement.innerHTML = `<strong>${comment.author}:</strong> ${comment.text}`;
+        commentList.appendChild(commentElement); // Добавляем комментарий в список
+    });
 }
 
 // Функция для экстренной перезагрузки серверов
