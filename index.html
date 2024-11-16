@@ -9,7 +9,7 @@
 <body>
     <div id="loading" class="loading">
         <div class="loader"></div>
-        <h1>обращение к серверу за сведениями 0Х00000003 load</h1>
+        <h1>Загрузка...</h1>
     </div>
 
     <div id="app" class="hidden">
@@ -19,7 +19,6 @@
                 <button class="nav-button" id="logout-button" onclick="logout()">Выйти</button>
                 <button class="nav-button" onclick="showAdminLogin()">Вход как админ</button>
                 <span id="account-info"></span>
-                <span id="post-timer"></span>
             </nav>
         </header>
         <main>
@@ -36,8 +35,19 @@
                     <button type="submit">Опубликовать</button>
                 </form>
                 <div id="posts"></div>
+                <button class="nav-button" onclick="openAdminPanel()">Панель администратора</button> <!-- Кнопка для открытия панели администратора -->
             </div>
         </main>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="admin-overlay" onclick="closeAdminPanel()"></div>
+        <div class="admin-content">
+            <h2>Панель администратора</h2>
+            <div id="admin-posts"></div>
+            <button onclick="clearAllPosts()">Удалить все посты</button>
+            <button onclick="closeAdminPanel()">Закрыть</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
