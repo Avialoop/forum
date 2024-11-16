@@ -7,6 +7,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 100vh;
 }
 
 header {
@@ -125,7 +126,6 @@ header {
     background: #f0f0f0;
     border: 1px solid #ddd;
     border-radius: 5px;
-    position: relative;
 }
 
 .post h3 {
