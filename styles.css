@@ -16,9 +16,9 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Стили для заголовков постов */
-h3 {
-    margin: 0 0 10px;
+/* Стили для заголовков */
+h1, h2, h3 {
+    color: #333;
 }
 
 /* Стили для постов */
@@ -39,14 +39,7 @@ h3 {
 /* Стили для заблокированных постов */
 .blocked {
     color: red;
-}
-
-/* Стили для комментариев */
-.comment {
-    border-left: 2px solid #ccc;
-    padding-left: 10px;
-    margin: 5px 0;
-    font-style: italic;
+    text-decoration: line-through;
 }
 
 /* Стили для кнопок */
@@ -57,6 +50,7 @@ button {
     padding: 10px 15px;
     margin-top: 10px;
     cursor: pointer;
+    border-radius: 5px;
     transition: background-color 0.3s;
 }
 
@@ -64,7 +58,7 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* Стили для формы */
+/* Стили для форм */
 form {
     margin-bottom: 20px;
 }
@@ -110,4 +104,53 @@ textarea {
 /* Стили для списка комментариев */
 #comment-list {
     margin-top: 10px;
+}
+
+/* Стили для комментариев */
+.comment {
+    border-left: 2px solid #ccc;
+    padding-left: 10px;
+    margin: 5px 0;
+    font-style: italic;
+}
+
+/* Стили для ссылок */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Стили для заголовков форм */
+h2 {
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+/* Стили для кнопки выхода из аккаунта */
+.logout-button {
+    background-color: #dc3545; /* Красная кнопка */
+}
+
+/* Стили для панели администратора */
+#admin-panel {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+/* Стили для кнопки панели администратора */
+#admin-panel-button {
+    margin-top: 10px;
+}
+
+/* Стили для сообщений об ошибках */
+.error-message {
+    color: red;
+    font-weight: bold;
 }
