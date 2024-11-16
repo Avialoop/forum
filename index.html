@@ -8,6 +8,7 @@
 </head>
 <body>
     <div id="loading" class="loading">
+        <div class="loader"></div>
         <h1>Загрузка...</h1>
     </div>
 
@@ -15,9 +16,9 @@
         <header>
             <h1>Форум</h1>
             <nav>
-                <button onclick="showLogin()">Вход</button>
-                <button onclick="showRegister()">Регистрация</button>
-                <button onclick="guestMode()">Режим гостя</button>
+                <button class="nav-button" onclick="showLogin()">Вход</button>
+                <button class="nav-button" onclick="showRegister()">Регистрация</button>
+                <button class="nav-button" onclick="guestMode()">Режим гостя</button>
             </nav>
         </header>
         <main>
@@ -35,7 +36,7 @@
             </div>
         </main>
         <footer>
-            <button onclick="showAdminPanel()">Войти как админ</button>
+            <button class="nav-button" onclick="showAdminPanel()">Войти как админ</button>
         </footer>
     </div>
 
