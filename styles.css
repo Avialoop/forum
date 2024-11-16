@@ -255,3 +255,7 @@ nav {
     background-color: #bbdefb;
     color: #1e88e5;
 }
+.pinned {
+    border: 2px solid gold; /* Золотая рамка вокруг закрепленного поста */
+    background-color: #f9f9f9; /* Светлый фон для выделения */
+}
