@@ -124,7 +124,7 @@ nav button:hover {
     height: auto;
 }
 
-.delete-button {
+.delete-button, .edit-button {
     background: #dc3545;
     color: white;
     border: none;
@@ -132,9 +132,30 @@ nav button:hover {
     border-radius: 5px;
     cursor: pointer;
     float: right;
+    margin-left: 5px;
     transition: background 0.3s;
 }
 
-.delete-button:hover {
+.delete-button:hover, .edit-button:hover {
     background: #c82333;
+}
+
+.admin-panel {
+    display: none;
+    margin: 20px;
+    padding: 20px;
+    background: #2c2c2c;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 500px;
+}
+
+.admin-panel input {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background: #424242;
+    color: white;
 }
