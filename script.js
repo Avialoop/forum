@@ -26,6 +26,18 @@ function closeAdminPanel() {
     document.getElementById("admin-panel").classList.add("hidden"); // Скрываем панель администратора
 }
 
+// Показать страницу входа администратора
+function showAdminLogin() {
+    const adminPin = prompt("Введите ПИН-код администратора:"); // Запрашиваем пин-код
+    if (adminPin === "0852-7533") {
+        isAdmin = true; // Устанавливаем флаг администратора
+        alert("Добро пожаловать, администратор!");
+        openAdminPanel(); // Открываем панель администратора сразу после входа
+    } else {
+        alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
+    }
+}
+
 // Отображение постов в панели администратора
 function renderAdminPosts() {
     const adminPostsContainer = document.getElementById("admin-posts");
@@ -67,8 +79,6 @@ function deleteAllBlockedPosts() {
     renderAdminPosts(); // Обновляем отображение постов в панели администратора
 }
 
-// Остальные функции остаются без изменений...
-
 // Удаление поста по индексу
 function deletePostByIndex(index) {
     posts.splice(index, 1); // Удаляем пост из массива
@@ -84,6 +94,10 @@ function blockPost(index) {
     renderPosts(); // Обновляем отображение постов на главной странице
     renderAdminPosts(); // Обновляем отображение постов в панели администратора
 }
+
+// Остальная логика (вход, регистрация и т.д.) остается без изменений...
+
+
 
 // Остальная логика (вход, регистрация и т.д.) остается без изменений...
 
