@@ -97,6 +97,7 @@ function pinPost(postIndex) {
     posts[postIndex].isPinned = true; // Устанавливаем флаг закрепления
     localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
     renderAdminPosts(); // Обновляем отображение постов в панели администратора
+    renderPosts(); // Обновляем отображение постов на главной странице
     alert("Пост закреплен.");
 }
 
@@ -133,7 +134,7 @@ function createPost(event) {
         title: title,
         content: content,
         author: currentUser,
-        createdAt: new Date().getTime(),
+        createdAt: new Date().getTime() + 24 * 60 * 60 * 1000, // Устанавливаем время жизни поста на 24 часа
         allowComments: allowComments,
         isBlocked: false,
         isPinned: false
@@ -178,8 +179,9 @@ function handleLogin(event) {
     currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
     alert("Вход выполнен!"); // Уведомление о входе
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
-    document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin); // Показываем или скрываем кнопку панели администратора
+    document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin);
     updateAccountInfo(); // Обновляем информацию о текущем пользователе
+    checkForPinnedPosts(); // Проверяем наличие закрепленных постов и уведомляем пользователя
 }
 
 // Показать форму регистрации
@@ -197,25 +199,32 @@ function showRegistration() {
 // Обработка логики регистрации
 function handleRegistration(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
-    const newUsername = document.getElementById("new-username").value;
+    const newUsername = document.getElementById("new-username").value; // Получаем новое имя пользователя
 
-    // Проверяем, существует ли пользователь с таким именем
-    if (users.some(user => user.username === newUsername)) {
-        alert("Пользователь с таким именем уже существует!");
+    // Проверяем, существует ли уже пользователь
+    if (users.includes(newUsername)) {
+        alert("Пользователь с таким именем уже существует.");
         return;
     }
 
-    // Добавляем нового пользователя
-    users.push({ username: newUsername, isBlocked: false });
-    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем изменения в localStorage
-    alert("Регистрация успешна!"); // Уведомление о регистрации
-    showLogin(); // Показать форму входа после регистрации
+    users.push(newUsername); // Добавляем нового пользователя в массив
+    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем пользователей в localStorage
+    alert("Регистрация успешна! Теперь вы можете войти."); // Уведомление об успешной регистрации
+    showLogin(); // Показать форму входа
 }
 
 // Обновление информации о текущем пользователе
 function updateAccountInfo() {
     const accountInfo = document.getElementById("account-info");
-    accountInfo.textContent = `Вход: ${currentUser}`;
+    accountInfo.textContent = currentUser ? `Вы вошли как: ${currentUser}` : "Вы не вошли в систему.";
+}
+
+// Проверка на наличие закрепленных постов
+function checkForPinnedPosts() {
+    const pinnedPosts = posts.filter(post => post.isPinned);
+    if (pinnedPosts.length > 0) {
+        alert(`Есть закрепленные посты:\n${pinnedPosts.map(post => post.title).join('\n')}`);
+    }
 }
 
 // Отображение постов на главной странице
@@ -223,34 +232,38 @@ function renderPosts() {
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
 
-    posts.forEach(post => {
-        if (!post.isBlocked) { // Не отображаем заблокированные посты
+    posts.forEach((post) => {
+        if (!post.isBlocked) { // Проверяем, не заблокирован ли пост
             const postElement = document.createElement("div");
             postElement.classList.add("post");
+            if (post.isPinned) {
+                postElement.classList.add("pinned"); // Добавляем класс для закрепленных постов
+            }
+
             postElement.innerHTML = `
                 <h3>${post.title}</h3>
                 <p>${post.content}</p>
                 <p>Автор: ${post.author}</p>
-                <p>${new Date(post.createdAt).toLocaleString()}</p>
-                ${post.allowComments ? '<p>Комментарии разрешены</p>' : '<p>Комментарии запрещены</p>'}
+                <p>Дата: ${new Date(post.createdAt).toLocaleString()}</p>
+                <p>Осталось времени: ${Math.max(0, Math.floor((post.createdAt - Date.now()) / (1000 * 60 * 60 * 24)))} дней</p>
+                ${post.allowComments ? "<button onclick='enableComments()'>Комментировать</button>" : ""}
             `;
             postsContainer.appendChild(postElement); // Добавляем пост в контейнер
         }
     });
+
+    // Удаляем посты, которые истекли
+    removeExpiredPosts();
 }
 
-// Загрузка пользователей из localStorage при загрузке страницы
-window.onload = function() {
-    const savedPosts = JSON.parse(localStorage.getItem('posts'));
-    if (savedPosts) {
-        posts = savedPosts; // Загружаем сохраненные посты
-        renderPosts(); // Отображаем посты
-    }
-    const savedUsers = JSON.parse(localStorage.getItem('users'));
-    if (savedUsers) {
-        users = savedUsers; // Загружаем сохраненных пользователей
-    }
-// Функция для показа окна ввода пароля
+// Удаление истекших постов
+function removeExpiredPosts() {
+    const currentTime = Date.now();
+    posts = posts.filter(post => post.createdAt > currentTime); // Оставляем только те посты, которые еще не истекли
+    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
+}
+
+// Функция для экстренной перезагрузки серверов
 function showEmergencyReboot() {
     console.log("Попытка экстренной перезагрузки серверов..."); // Отладочное сообщение
     const password = prompt("Введите пароль для экстренной перезагрузки серверов:");
@@ -270,4 +283,8 @@ function clearAllPosts() {
         alert("Все посты были успешно удалены."); // Уведомление об успешном удалении
     }
 }
-};
+
+// Функция для включения комментариев
+function enableComments() {
+    alert("Функция комментариев еще не реализована."); // Временно уведомление
+}
