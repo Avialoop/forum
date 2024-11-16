@@ -6,7 +6,6 @@ body {
     padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
     height: 100vh;
 }
 
@@ -15,10 +14,9 @@ header {
     color: white;
     padding: 20px;
     text-align: center;
-    width: 100%;
 }
 
-.nav-bar {
+nav {
     display: flex;
     justify-content: flex-end;
 }
@@ -32,7 +30,6 @@ header {
     color: white;
     cursor: pointer;
     transition: background 0.3s;
-    font-size: 16px;
 }
 
 .nav-button:hover {
@@ -67,10 +64,10 @@ header {
     display: none;
 }
 
-.form-container, .admin-panel {
+.form-container, .post-container {
     margin: 20px;
     padding: 20px;
-    background: #ffffff;
+    background: white;
     border-radius: 5px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -99,25 +96,14 @@ header {
     color: white;
     cursor: pointer;
     transition: background 0.3s;
-    font-size: 16px;
 }
 
 .form-container button:hover {
     background: #005f99;
 }
 
-.checkbox-container {
-    margin-bottom: 15px;
-}
-
 .post-container {
     margin: 20px;
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
 }
 
 .post {
@@ -162,12 +148,4 @@ header {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 600px;
-}
-
-.admin-panel input {
-    margin-bottom: 10px;
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
 }
