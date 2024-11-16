@@ -1,5 +1,6 @@
 let isAdmin = false;
 let posts = [];
+let currentUser = "Пользователь"; // Текущий пользователь, можно заменить на реальный логин
 
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
@@ -34,6 +35,12 @@ function showRegister() {
     document.getElementById("post-container").classList.add("hidden");
 }
 
+function logout() {
+    currentUser = null;
+    alert("Вы вышли из системы.");
+    showLogin();
+}
+
 function guestMode() {
     alert("Вы вошли как гость. Ваше имя: guest");
     showPostContainer();
@@ -54,6 +61,7 @@ function showAdminPanel() {
     isAdmin = true;
     document.getElementById("post-container").classList.add("hidden");
 
+
     const adminPanel = document.createElement("div");
     adminPanel.classList.add("admin-panel");
     adminPanel.innerHTML = `
@@ -63,12 +71,13 @@ function showAdminPanel() {
         <input type="text" id="user-id" placeholder="ID пользователя для блокировки">
         <button onclick="blockUser()">Заблокировать пользователя</button>
     `;
-       document.getElementById("app").appendChild(adminPanel);
+    document.getElementById("app").appendChild(adminPanel);
 }
 
 function handleLogin(event) {
     event.preventDefault();
     // Здесь вы можете добавить логику проверки логина и пароля
+    currentUser = "Входящий пользователь"; // Установите текущего пользователя
     alert("Вход выполнен!");
     showPostContainer();
 }
@@ -86,7 +95,8 @@ function createPost(event) {
     const title = document.getElementById("post-title").value;
     const content = document.getElementById("post-content").value;
     const image = document.getElementById("post-image").files[0];
-    const postAuthor = "пользователь"; // Здесь можно добавить имя текущего пользователя
+    const isAnonymous = document.getElementById("anonymous").checked;
+    const postAuthor = isAnonymous ? "Аноним" : currentUser;
 
     const post = {
         title: title,
