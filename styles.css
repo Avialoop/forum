@@ -38,32 +38,18 @@ nav button:hover {
 
 .loading {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
     font-size: 24px;
-}
-
-.loader {
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    color: #3498db;
 }
 
 .hidden {
     display: none;
 }
 
-.form-container {
+.form-container, .admin-panel {
     margin: 20px;
     padding: 20px;
     background: #2c2c2c;
@@ -73,12 +59,12 @@ nav button:hover {
     max-width: 500px;
 }
 
-.form-container form {
+.form-container form, .admin-panel form {
     display: flex;
     flex-direction: column;
 }
 
-.form-container input, .form-container textarea {
+.form-container input, .form-container textarea, .admin-panel input {
     margin-bottom: 10px;
     padding: 10px;
     border: 1px solid #555;
@@ -87,7 +73,7 @@ nav button:hover {
     color: white;
 }
 
-.form-container button {
+.form-container button, .admin-panel button {
     padding: 10px;
     border: none;
     border-radius: 5px;
@@ -97,7 +83,7 @@ nav button:hover {
     transition: background 0.3s;
 }
 
-.form-container button:hover {
+.form-container button:hover, .admin-panel button:hover {
     background: #005f99;
 }
 
@@ -117,6 +103,12 @@ nav button:hover {
     background: #3c3c3c;
     border: 1px solid #555;
     border-radius: 5px;
+    position: relative;
+}
+
+.post::before {
+    content: "$ "; /* Символ терминала перед текстом поста */
+    color: #00ff00; /* Зеленый цвет для терминала */
 }
 
 .post img {
