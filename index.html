@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forums</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loading" class="loading">
+        <h1>Загрузка...</h1>
+    </div>
+
+    <div id="app" class="hidden">
+        <header>
+            <h1>Форум</h1>
+            <nav>
+                <button onclick="showLogin()">Вход</button>
+                <button onclick="showRegister()">Регистрация</button>
+                <button onclick="guestMode()">Режим гостя</button>
+            </nav>
+        </header>
+        <main>
+            <div id="form-container" class="form-container hidden"></div>
+
+            <div id="post-container" class="post-container hidden">
+                <h2>Создать пост</h2>
+                <form id="post-form" onsubmit="createPost(event)">
+                    <input type="text" id="post-title" placeholder="Заголовок поста" required>
+                    <textarea id="post-content" placeholder="Содержание поста" required></textarea>
+                    <input type="file" id="post-image" accept="image/*">
+                    <button type="submit">Опубликовать</button>
+                </form>
+                <div id="posts"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
