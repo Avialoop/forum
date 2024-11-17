@@ -297,13 +297,6 @@ function renderComments(postIndex) {
     });
 }
 
-// ... ваш дальнейший код ...
-
-    // Удаляем посты, которые истекли
-    removeExpiredPosts();
-    updateTimers(); // Обновляем таймеры на странице
-}
-
 // Обновление таймеров
 function updateTimers() {
     posts.forEach((post, index) => {
