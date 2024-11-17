@@ -241,7 +241,7 @@ function renderPosts() {
         if (post.isBlocked) {
             postElement.classList.add("blocked"); // Добавляем класс для заблокированных постов
             postElement.innerHTML = `
-                <h3 style="background-color: red; color: white;">🚫 ${post.title} 🚧</h3>
+                <h3 style="background-color: red; color: white;"> ${post.title}  🚫</h3>
                 <p style="color: red;">Этот пост заблокирован администрацией.</p>
                 <p>Причина: ${post.blockedReason}</p>
             `;
