@@ -17,32 +17,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Открыть панель администратора
+// Открыть панель администратора в новом окне
 function openAdminPanel() {
     if (!isAdmin) {
         alert("Вы должны войти как администратор!");
         return;
     }
-    renderAdminPosts(); // Отображаем посты в панели администратора
-    document.getElementById("admin-panel").classList.remove("hidden"); // Показываем панель администратора
-}
-
-// Закрыть панель администратора
-function closeAdminPanel() {
-    document.getElementById("admin-panel").classList.add("hidden"); // Скрываем панель администратора
-}
-
-// Показать страницу входа администратора
-function showAdminLogin() {
-    const adminPin = prompt("Введите ПИН-код администратора:"); // Запрашиваем пин-код
-    if (adminPin === "0852-7533") {
-        isAdmin = true; // Устанавливаем флаг администратора
-        alert("Добро пожаловать, администратор!");
-        document.getElementById("admin-panel-button").classList.remove("hidden"); // Показываем кнопку панели администратора
-        openAdminPanel(); // Открываем панель администратора сразу после входа
-    } else {
-        alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
-    }
+    
+    const adminWindow = window.open("", "Admin Panel", "width=600,height=400");
+    adminWindow.document.write(`
+        <html>
+            <head>
+                <title>Панель администратора</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    .blocked-post { background-color: lightcoral; padding: 10px; margin: 10px 0; }
+                    .blocked-post h3 { color: white; }
+                </style>
+            </head>
+            <body>
+                <h1>Панель администратора</h1>
+                <div id="admin-posts"></div>
+                <button onclick="window.close()">Закрыть панель</button>
+                <script>
+                    ${renderAdminPosts.toString()}
+                    renderAdminPosts();
+                </script>
+            </body>
+        </html>
+    `);
 }
 
 // Отображение постов в панели администратора
@@ -52,13 +55,21 @@ function renderAdminPosts() {
 
     posts.forEach((post, index) => {
         const postElement = document.createElement("div");
-        postElement.classList.add("post");
-
-        postElement.innerHTML = `
-            <h3>${post.title}</h3>
-            <p>Автор: ${post.author}</p>
-            <button onclick="showAdminPostActions(${index})">Действия</button>
-        `;
+        
+        if (post.isBlocked) {
+            postElement.classList.add("blocked-post"); // Добавляем класс для заблокированных постов
+            postElement.innerHTML = `
+                <h3>🚫 ${post.title}</h3>
+                <p>Этот пост заблокирован администрацией.</p>
+                <p>Причина: ${post.blockedReason || "Не указана"}</p>
+            `;
+        } else {
+            postElement.innerHTML = `
+                <h3>${post.title}</h3>
+                <p>Автор: ${post.author}</p>
+                <button onclick="showAdminPostActions(${index})">Действия</button>
+            `;
+        }
 
         adminPostsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
@@ -86,19 +97,6 @@ function showAdminPostActions(postIndex) {
     }
 }
 
-// Продлить срок жизни поста
-function extendPostLife(postIndex) {
-    const seconds = parseInt(prompt("На сколько секунд продлить срок жизни поста?"), 10);
-    if (!isNaN(seconds) && seconds > 0) {
-        posts[postIndex].createdAt += seconds * 1000; // Продление срока жизни
-        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
-        renderAdminPosts(); // Обновляем отображение постов в панели администратора
-        alert(`Срок жизни поста продлен на ${seconds} секунд.`);
-    } else {
-        alert("Некорректное значение.");
-    }
-}
-
 // Блокировка поста
 function blockPost(index, reason) {
     posts[index].isBlocked = true; // Устанавливаем флаг блокировки
@@ -106,7 +104,6 @@ function blockPost(index, reason) {
     posts[index].content = ""; // Очищаем содержимое поста
     localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
     renderPosts(); // Обновляем отображение постов на главной странице
-    renderAdminPosts(); // Обновляем отображение постов в панели администратора
     alert("Пост заблокирован.");
 }
 
@@ -356,6 +353,8 @@ function clearAllPosts() {
 function updateAccountInfo() {
     console.log("Обновление информации о пользователе:", currentUser);
 }
+
+// Остальная часть кода остается без изменений...
 
 // Начальная инициализация приложения
 function initializeApp() {
