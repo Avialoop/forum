@@ -229,49 +229,75 @@ function checkForPinnedPosts() {
     }
 }
 
+// ... ваш предыдущий код ...
+
 // Отображение постов на главной странице
 function renderPosts() {
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = ""; // Очищаем контейнер перед добавлением новых постов
 
-    posts.forEach((post) => {
+    posts.forEach((post, index) => {
         const postElement = document.createElement("div");
         postElement.classList.add("post");
-        
-        if (post.isBlocked) {
-            postElement.classList.add("blocked"); // Добавляем класс для заблокированных постов
-            postElement.innerHTML = `
-                <h3 style="background-color: red; color: white;">🚫 ${post.title} 🚧</h3>
-                <p style="color: red;">Этот пост заблокирован администрацией.</p>
-                <p>Причина: ${post.blockedReason}</p>
-            `;
-        } else {
-            if (post.isPinned) {
-                postElement.classList.add("pinned"); // Добавляем класс для закрепленных постов
-            }
 
-            const timeLeft = Math.max(0, Math.floor((post.createdAt - Date.now()) / 1000)); // Оставшееся время в секундах
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
+        postElement.innerHTML = `
+            <h3>${post.title}</h3>
+            <p>${post.content}</p>
+            <p>Автор: ${post.author}</p>
+            <button onclick="toggleComments(${index})">Комментарии (${post.comments.length})</button>
+            <div id="comments-${index}" class="comments-section" style="display: none;">
+                <div id="comment-list-${index}"></div>
+                <input type="text" id="comment-input-${index}" placeholder="Ваш комментарий" />
+                <button onclick="addComment(${index})">Добавить комментарий</button>
+            </div>
+        `;
 
-            postElement.innerHTML = `
-                <h3>${post.title}</h3>
-                <p>${post.content}</p>
-                <p>Автор: ${post.author}</p>
-                <p>Дата: ${new Date(post.createdAt).toLocaleString()}</p>
-                <p>Осталось времени: <span id="timer-${posts.indexOf(post)}">${minutes} минут ${seconds} секунд</span></p>
-                ${post.allowComments ? `
-                    <button onclick="toggleComments(${posts.indexOf(post)})">Показать комментарии</button>
-                    <div id="comments-${posts.indexOf(post)}" style="display:none;">
-                        <input type="text" id="comment-input-${posts.indexOf(post)}" placeholder="Ваш комментарий">
-                        <button onclick="addComment(${posts.indexOf(post)})">Добавить</button>
-                        <div id="comment-list-${posts.indexOf(post)}"></div>
-                    </div>` : ""}
-            `;
-        }
+        // Отображение комментариев
+        post.comments.forEach(comment => {
+            const commentElement = document.createElement("div");
+            commentElement.textContent = comment;
+            postElement.appendChild(commentElement);
+        });
 
         postsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
+}
+
+// Переключение видимости комментариев
+function toggleComments(postIndex) {
+    const commentsSection = document.getElementById(`comments-${postIndex}`);
+    commentsSection.style.display = commentsSection.style.display === "none" ? "block" : "none"; // Переключаем видимость
+    renderComments(postIndex); // Обновляем отображение комментариев
+}
+
+// Добавление комментария
+function addComment(postIndex) {
+    const commentInput = document.getElementById(`comment-input-${postIndex}`);
+    const comment = commentInput.value.trim();
+
+    if (comment) {
+        posts[postIndex].comments.push(comment); // Добавляем комментарий к посту
+        localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
+        renderComments(postIndex); // Обновляем отображение комментариев
+        commentInput.value = ""; // Очищаем поле ввода
+    } else {
+        alert("Комментарий не может быть пустым.");
+    }
+}
+
+// Отображение комментариев
+function renderComments(postIndex) {
+    const commentList = document.getElementById(`comment-list-${postIndex}`);
+    commentList.innerHTML = ""; // Очищаем список комментариев
+
+    posts[postIndex].comments.forEach(comment => {
+        const commentElement = document.createElement("div");
+        commentElement.textContent = comment;
+        commentList.appendChild(commentElement); // Добавляем комментарий в список
+    });
+}
+
+// ... ваш дальнейший код ...
 
     // Удаляем посты, которые истекли
     removeExpiredPosts();
