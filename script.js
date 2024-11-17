@@ -17,6 +17,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Показать страницу входа администратора
+function showAdminLogin() {
+    const adminPin = prompt("Введите ПИН-код администратора:"); // Запрашиваем пин-код
+    if (adminPin === "0852-7533") {
+        isAdmin = true; // Устанавливаем флаг администратора
+        alert("Добро пожаловать, администратор!");
+        document.getElementById("admin-panel-button").classList.remove("hidden"); // Показываем кнопку панели администратора
+        openAdminPanel(); // Открываем панель администратора сразу после входа
+    } else {
+        alert("Неверный ПИН-код!"); // Ошибка при неправильном ПИН-коде
+    }
+}
+
 // Открыть панель администратора в новом окне
 function openAdminPanel() {
     if (!isAdmin) {
