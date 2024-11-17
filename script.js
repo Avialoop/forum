@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         document.getElementById("loading").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
-        renderPosts();
+        renderPosts(); // Отображаем посты при загрузке
     }, 2000);
 });
 
@@ -178,11 +178,50 @@ function showLogin() {
 function handleLogin(event) {
     event.preventDefault(); // Предотвращаем перезагрузку страницы
     currentUser = document.getElementById("username").value; // Устанавливаем текущего пользователя
+
+    // Проверяем, существует ли пользователь
+    if (!users.includes(currentUser)) {
+        alert("Пользователь не найден. Пожалуйста, зарегистрируйтесь.");
+        return;
+    }
+
     alert("Вход выполнен!"); // Уведомление о входе
     document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
     document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin);
     updateAccountInfo(); // Обновляем информацию о текущем пользователе
-    checkForPinnedPosts(); // Проверяем наличие закрепленых сбщ
+    checkForPinnedPosts(); // Проверяем наличие закрепленных постов
+}
+
+// Регистрация нового пользователя
+function showRegistration() {
+    document.getElementById("form-container").innerHTML = `
+        <h2>Регистрация</h2>
+        <form id="registration-form" onsubmit="handleRegistration(event)">
+            <input type="text" id="new-username" placeholder="Имя пользователя" required>
+            <button type="submit">Зарегистрироваться</button>
+            <p>Уже есть аккаунт? <a href="#" onclick="showLogin()">Войдите</a></p>
+        </form>
+    `;
+    document.getElementById("form-container").classList.remove("hidden"); // Показываем форму регистрации
+}
+
+// Обработка логики регистрации
+function handleRegistration(event) {
+    event.preventDefault(); // Предотвращаем перезагрузку страницы
+    const newUsername = document.getElementById("new-username").value; // Получаем имя пользователя
+
+    // Проверяем, существует ли пользователь
+    if (users.includes(newUsername)) {
+        alert("Пользователь с таким именем уже существует. Пожалуйста, выберите другое имя.");
+        return;
+    }
+
+    users.push(newUsername); // Добавляем нового пользователя в массив
+    localStorage.setItem('users', JSON.stringify(users)); // Сохраняем пользователей в localStorage
+    alert("Регистрация прошла успешно! Теперь вы можете войти в систему."); // Уведомление об успешной регистрации
+    showLogin(); // Показать форму входа
+}
+
 // Проверка на наличие закрепленных постов
 function checkForPinnedPosts() {
     const pinnedPosts = posts.filter(post => post.isPinned);
@@ -221,14 +260,16 @@ function renderPosts() {
                 <p>Автор: ${post.author}</p>
                 <p>Дата: ${new Date(post.createdAt).toLocaleString()}</p>
                 <p>Осталось времени: ${minutes} минут ${seconds} секунд</p>
-                ${post.allowComments ? `<button onclick="toggleComments(${posts.indexOf(post)})">Показать комментарии</button>
-                <div id="comments-${posts.indexOf(post)}" style="display:none;">
-                    <input type="text" id="comment-input-${posts.indexOf(post)}" placeholder="Ваш комментарий">
-                    <button onclick="addComment(${posts.indexOf(post)})">Добавить</button>
-                    <div id="comment-list-${posts.indexOf(post)}"></div>
-                </div>` : ""}
+                ${post.allowComments ? `
+                    <button onclick="toggleComments(${posts.indexOf(post)})">Показать комментарии</button>
+                    <div id="comments-${posts.indexOf(post)}" style="display:none;">
+                        <input type="text" id="comment-input-${posts.indexOf(post)}" placeholder="Ваш комментарий">
+                        <button onclick="addComment(${posts.indexOf(post)})">Добавить</button>
+                        <div id="comment-list-${posts.indexOf(post)}"></div>
+                    </div>` : ""}
             `;
         }
+
         postsContainer.appendChild(postElement); // Добавляем пост в контейнер
     });
 
@@ -296,3 +337,21 @@ function clearAllPosts() {
         alert("Все посты были успешно удалены."); // Уведомление об успешном удалении
     }
 }
+
+// Обновление информации о текущем пользователе
+function updateAccountInfo() {
+    console.log("Обновление информации о пользователе:", currentUser);
+}
+
+// Начальная инициализация приложения
+function initializeApp() {
+    if (localStorage.getItem('posts')) {
+        posts = JSON.parse(localStorage.getItem('posts'));
+    }
+    if (localStorage.getItem('users')) {
+        users = JSON.parse(localStorage.getItem('users'));
+    }
+}
+
+// Вызов функции инициализации
+initializeApp();
