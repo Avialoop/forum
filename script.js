@@ -2,6 +2,7 @@ let isAdmin = false; // Флаг для проверки, является ли 
 let posts = JSON.parse(localStorage.getItem('posts')) || []; // Получаем посты из localStorage
 let users = JSON.parse(localStorage.getItem('users')) || []; // Получаем пользователей из localStorage
 let currentUser = null; // Текущий пользователь, который вошел в систему
+let bannedUsers = JSON.parse(localStorage.getItem('bannedUsers')) || {}; // Получаем заблокированных пользователей
 
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
@@ -9,6 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("app").classList.remove("hidden");
         renderPosts(); // Отображаем посты при загрузке
     }, 2000);
+    
+    // Проверяем заблокирован ли текущий пользователь
+    if (currentUser && bannedUsers[currentUser]) {
+        alert(`Вы заблокированы администрацией.\nПричина: ${bannedUsers[currentUser].reason}\nОсталось времени до разблокировки: ${bannedUsers[currentUser].timeLeft} сек.`);
+    }
 });
 
 // Открыть панель администратора
@@ -66,7 +72,8 @@ function showAdminPostActions(postIndex) {
             deletePostByIndex(postIndex); // Удалить пост
             break;
         case "2":
-            blockPost(postIndex); // Заблокировать пост
+            const reason = prompt("Введите причину блокировки:");
+            blockPost(postIndex, reason); // Заблокировать пост
             break;
         case "3":
             extendPostLife(postIndex); // Продлить срок жизни поста
@@ -92,29 +99,15 @@ function extendPostLife(postIndex) {
     }
 }
 
-// Закрепить пост
-function pinPost(postIndex) {
-    posts[postIndex].isPinned = true; // Устанавливаем флаг закрепления
-    localStorage.setItem('posts', JSON.stringify(posts)); // Сохраняем изменения в localStorage
-    renderAdminPosts(); // Обновляем отображение постов в панели администратора
-    renderPosts(); // Обновляем отображение постов на главной странице
-    alert("Пост закреплен.");
-}
-
-// Удаление поста по индексу
-function deletePostByIndex(index) {
-    posts.splice(index, 1); // Удаляем пост из массива
-    localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
-    renderPosts(); // Обновляем отображение постов на главной странице
-    renderAdminPosts(); // Обновляем отображение постов в панели администратора
-}
-
 // Блокировка поста
-function blockPost(index) {
+function blockPost(index, reason) {
     posts[index].isBlocked = true; // Устанавливаем флаг блокировки
+    posts[index].blockedReason = reason; // Устанавливаем причину блокировки
+    posts[index].content = ""; // Очищаем содержимое поста
     localStorage.setItem('posts', JSON.stringify(posts)); // Обновляем сохранение в localStorage
     renderPosts(); // Обновляем отображение постов на главной странице
     renderAdminPosts(); // Обновляем отображение постов в панели администратора
+    alert("Пост заблокирован.");
 }
 
 // Создание поста
@@ -124,9 +117,14 @@ function createPost(event) {
     const content = document.getElementById("post-content").value;
     const allowComments = document.getElementById("allow-comments").checked;
 
-    // Проверяем, вошел ли пользователь
+    // Проверяем, вошел ли пользователь и не заблокирован ли он
     if (!currentUser) {
         alert("Сначала войдите в систему, чтобы опубликовать пост.");
+        return;
+    }
+
+    if (bannedUsers[currentUser]) {
+        alert(`Вы заблокированы администрацией.\nПричина: ${bannedUsers[currentUser].reason}\nОсталось времени до разблокировки: ${bannedUsers[currentUser].timeLeft} сек.`);
         return;
     }
 
@@ -186,7 +184,8 @@ function handleLogin(event) {
     }
 
     alert("Вход выполнен!"); // Уведомление о входе
-    document.getElementById("form-container").classList.add("hidden"); // Скрываем форму входа
+    document.getElementById("form-container").
+    classList.add("hidden"); // Скрываем форму входа
     document.getElementById("admin-panel-button").classList.toggle("hidden", !isAdmin);
     updateAccountInfo(); // Обновляем информацию о текущем пользователе
     checkForPinnedPosts(); // Проверяем наличие закрепленных постов
@@ -242,8 +241,9 @@ function renderPosts() {
         if (post.isBlocked) {
             postElement.classList.add("blocked"); // Добавляем класс для заблокированных постов
             postElement.innerHTML = `
-                <h3 style="text-decoration: line-through; color: red;">${post.title} 🚧</h3>
-                <p style="color: red;">Этот пост заблокирован администратором.</p>
+                <h3 style="background-color: red; color: white;">🚫 ${post.title} 🚧</h3>
+                <p style="color: red;">Этот пост заблокирован администрацией.</p>
+                <p>Причина: ${post.blockedReason}</p>
             `;
         } else {
             if (post.isPinned) {
@@ -259,7 +259,7 @@ function renderPosts() {
                 <p>${post.content}</p>
                 <p>Автор: ${post.author}</p>
                 <p>Дата: ${new Date(post.createdAt).toLocaleString()}</p>
-                <p>Осталось времени: ${minutes} минут ${seconds} секунд</p>
+                <p>Осталось времени: <span id="timer-${posts.indexOf(post)}">${minutes} минут ${seconds} секунд</span></p>
                 ${post.allowComments ? `
                     <button onclick="toggleComments(${posts.indexOf(post)})">Показать комментарии</button>
                     <div id="comments-${posts.indexOf(post)}" style="display:none;">
@@ -275,6 +275,20 @@ function renderPosts() {
 
     // Удаляем посты, которые истекли
     removeExpiredPosts();
+    updateTimers(); // Обновляем таймеры на странице
+}
+
+// Обновление таймеров
+function updateTimers() {
+    posts.forEach((post, index) => {
+        const timerElement = document.getElementById(`timer-${index}`);
+        if (timerElement) {
+            const timeLeft = Math.max(0, Math.floor((post.createdAt - Date.now()) / 1000)); // Оставшееся время в секундах
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.innerText = `${minutes} минут ${seconds} секунд`;
+        }
+    });
 }
 
 // Удаление истекших постов
@@ -350,6 +364,9 @@ function initializeApp() {
     }
     if (localStorage.getItem('users')) {
         users = JSON.parse(localStorage.getItem('users'));
+    }
+    if (localStorage.getItem('bannedUsers')) {
+        bannedUsers = JSON.parse(localStorage.getItem('bannedUsers'));
     }
 }
 
